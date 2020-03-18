@@ -1,0 +1,6 @@
+resolver: lts-14.27
+packages:
+- .
+compiler-check: newer-minor
+extra-deps: 
+ - relude-0.6.0.0

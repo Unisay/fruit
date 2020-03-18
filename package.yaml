@@ -1,0 +1,66 @@
+name: frut
+version: "0.1.0.0"
+category: Compiler, Language
+author: Yuriy Lazarev
+maintainer: unisay@users.noreply.github.com
+bug-reports: unisay@users.noreply.github.com
+synopsis: >
+  The `frut` command line interface.
+description: >
+  FRUT - Functional Reactive programming language for the Web
+
+copyright: Yuriy Lazarev
+github: Unisay/frut
+license: MIT
+extra-source-files:
+  - README.md
+
+ghc-options:
+  - -Wall
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-record-updates
+  - -Wincomplete-uni-patterns
+  - -Wredundant-constraints
+  - -Wpartial-fields
+  - -Wtabs
+  - -Wmissing-local-signatures
+  - -fhelpful-errors
+  - -fprint-expanded-synonyms
+  - -fwarn-unused-do-bind
+  - -Werror=incomplete-patterns
+
+default-extensions: OverloadedStrings
+
+executables:
+  frut:
+    main: Main.hs
+    source-dirs:
+      - src
+    other-modules:
+      - Language.Frut.Alex
+      - Language.Frut.Data.Ident
+      - Language.Frut.Data.InputStream
+      - Language.Frut.Data.Position
+      - Language.Frut.Lexer
+      - Language.Frut.Parser
+      - Language.Frut.Parser.Internal
+      - Language.Frut.Parser.Monad
+      - Language.Frut.Syntax.AST
+      - Language.Frut.Syntax.Tok
+    dependencies:
+      - array
+      - deepseq
+      - name: base
+        mixin:
+          - hiding (Prelude)
+      - bytestring
+      - monad-loops
+      - optparse-applicative
+      - pathtype
+      - pretty-show
+      - name: relude
+        mixin:
+          - (Relude as Prelude, Relude.Unsafe)
+      - text
+      - utf8-string
