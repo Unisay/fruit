@@ -4,27 +4,37 @@ module Language.Frut.Parser.Internal where
 import qualified Language.Frut.Syntax.AST as AST
 import qualified Language.Frut.Syntax.Tok as Tok
 import Language.Frut.Alex
-import Language.Frut.Lexer (lexNonSpace)
+import Language.Frut.Lexer
 import Language.Frut.Data.Position
 import Language.Frut.Parser.Monad
 import Language.Frut.Syntax.Tok
-import qualified Language.Frut.Lexer
 import Relude.Unsafe ((!!))
+import qualified Data.List.NonEmpty as NEL
 }
 
-%name parseModule 
+%name parseModule
 %error { parseError }
 %tokentype { Spanned Tok }
-%lexer { lexNonSpace >>= } { Spanned Tok.EOF _ }
+%lexer { lexToken >>= } { Spanned Tok.EOF _ }
 %monad { P } { >>= } { return }
 %expect 0
 %token 
-  module { Spanned Tok.Module _ }
-  let { Spanned (Tok.Identifier "let") _ }
-  in { Spanned (Tok.Identifier "in") _ }
+  '.'      { Spanned Tok.Dot _ }
+  ws       { Spanned (Tok.Space Tok.Whitespace) _ }
+  module   { Spanned Tok.Module _ }
+  upperId  { Spanned (Tok.UpperId $$) _ }
+  lowerId  { Spanned (Tok.LowerId $$) _ }
+  let      { Spanned Tok.Let _ }
+  in       { Spanned Tok.In _ }
 %%
 
-Module : module { AST.Module }
+Module 
+  : module ws UpperIds { AST.Module $3 }
+
+UpperIds 
+  : upperId                 { pure $1 }
+  | upperId '.' UpperIds    { NEL.cons $1 $3 }
+
 
 {
 

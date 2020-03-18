@@ -7,6 +7,7 @@
 module Language.Frut.Lexer where
 
 import Language.Frut.Parser.Monad 
+import Language.Frut.Data.Ident
 import Language.Frut.Data.Position (Spanned(..), Span(..))
 import Language.Frut.Data.InputStream (peekChars, inputStreamEmpty, takeChar)
 import Language.Frut.Alex
@@ -30,24 +31,22 @@ $unisymbol = \x04 -- Trick Alex into handling Unicode. See [Unicode in Alex].
 $symbol    = [$ascsymbol $unisymbol] # [$special \_\"\']
 $unilarge  = \x01 -- Trick Alex into handling Unicode. See [Unicode in Alex].
 $asclarge  = [A-Z]
-$large     = [$asclarge $unilarge]
+$upper     = [$asclarge $unilarge]
 $unismall  = \x02 -- Trick Alex into handling Unicode. See [Unicode in Alex].
 $ascsmall  = [a-z]
-$small     = [$ascsmall $unismall \_]
+$lower     = [$ascsmall $unismall \_]
 $unigraphic = \x06 -- Trick Alex into handling Unicode. See [Unicode in Alex].
-$graphic   = [$small $large $symbol $digit $special $unigraphic \"\']
+$graphic   = [$lower $upper $symbol $digit $special $unigraphic \"\']
 $binit     = 0-1
 $octit     = 0-7
 $hexit     = [$decdigit A-F a-f]
 $uniidchar = \x07 -- Trick Alex into handling Unicode. See [Unicode in Alex].
-$idchar    = [$small $large $digit $uniidchar \']
-$pragmachar = [$small $large $digit]
+$idchar    = [$lower $upper $digit $uniidchar \']
+$pragmachar = [$lower $upper $digit]
 $docsym    = [\| \^ \* \$]
 
-@lowerName = $small $idchar*          
-@upperName = $large $idchar*       
-@varsym    = ($symbol # \:) $symbol*  -- variable (operator) symbol
-@consym    = \: $symbol*              -- constructor (operator) symbol
+@lowerId = $lower $idchar*          
+@upperId = $upper $idchar*       
 @numspc       = _*                    -- numeric spacer
 @decimal      = $decdigit(@numspc $decdigit)*
 @binary       = $binit(@numspc $binit)*
@@ -55,11 +54,7 @@ $docsym    = [\| \^ \* \$]
 @hexadecimal  = $hexit(@numspc $hexit)*
 @exponent     = @numspc [eE] [\-\+]? @decimal
 @bin_exponent = @numspc [pP] [\-\+]? @decimal
-@qualifier = (@upperName \.)+
-@qualifiedLowerName = @qualifier* @lowerName
-@qualifiedUpperName = @qualifier* @upperName
-@qvarsym = @qualifier @varsym
-@qconsym = @qualifier @consym
+
 @floating_point = @numspc @decimal \. @decimal @exponent? | @numspc @decimal @exponent
 @hex_floating_point = @numspc @hexadecimal \. @hexadecimal @bin_exponent? | @numspc @hexadecimal @bin_exponent
 -- normal signed numerical literals can only be explicitly negative,
@@ -71,21 +66,23 @@ $docsym    = [\| \^ \* \$]
 
 frut :-
 
-$white+ { pure . Tok.Space Tok.Whitespace }
-
+$white+ { token (Tok.Space Tok.Whitespace) }
 "module" { token Tok.Module }
-
-@qualifiedUpperName { token1 Tok.QualifiedUpperName }
-@qualifiedLowerName { token1 Tok.QualifiedLowerName }
+"." { token Tok.Dot }
+"(" { token Tok.LParen }
+")" { token Tok.RParen }
+"import" { token Tok.Import }
+"export" { token Tok.Export }
+"let" { token Tok.Let }
+"in" { token Tok.In }
+@lowerId { pure . Tok.LowerId . mkIdent }
+@upperId { pure . Tok.UpperId . mkIdent }
 
 {
 
 -- | Make a token.
 token :: Tok -> String -> P Tok
 token t _ = pure t
-
-token1 :: (String -> Tok) -> String -> P Tok
-token1 t s = pure (t s)
 
 -- | Lexer for one 'Token'. The only token this cannot produce is 'Interpolated'.
 lexToken :: P (Spanned Tok)

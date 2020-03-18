@@ -1,0 +1,37 @@
+Right
+  [ Module
+  , Space Whitespace
+  , UpperId "Hello"
+  , Space Whitespace
+  , LowerId "hello"
+  , Space Whitespace
+  , UpperId "Hello"
+  , Dot
+  , UpperId "Wonderful"
+  , Dot
+  , UpperId "World"
+  , Space Whitespace
+  , UpperId "HELLO"
+  , Dot
+  , UpperId "WORLD"
+  , Space Whitespace
+  , Let
+  , Space Whitespace
+  , In
+  , Space Whitespace
+  , UpperId "IN"
+  , Space Whitespace
+  , UpperId "Let"
+  , Space Whitespace
+  , UpperId "In"
+  , Space Whitespace
+  , UpperId "LET"
+  , Space Whitespace
+  , Import
+  , Space Whitespace
+  , Export
+  , Space Whitespace
+  , LParen
+  , RParen
+  , Space Whitespace
+  ]

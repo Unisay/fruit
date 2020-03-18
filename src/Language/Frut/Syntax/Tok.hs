@@ -12,10 +12,16 @@ import Language.Frut.Data.Ident (Ident)
 
 data Tok
   = Module
-  | QualifiedLowerName String
-  | QualifiedUpperName String
-  | Identifier Ident  
-  | Space Space String
+  | Import
+  | Export
+  | LParen
+  | RParen
+  | UpperId Ident
+  | LowerId Ident  
+  | Let
+  | In
+  | Dot
+  | Space Space
   | EOF
   deriving (Eq, Show)
 

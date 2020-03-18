@@ -4,8 +4,8 @@ module Language.Frut.LexerTest where
 
 import Language.Frut.Data.InputStream (InputStream, readInputStream)
 import Language.Frut.Data.Position (Spanned, initPos)
-import Language.Frut.Lexer (lexTokens, lexNonSpace)
-import Language.Frut.Parser.Monad (execParser, ParseFail)
+import Language.Frut.Lexer
+import Language.Frut.Parser.Monad (ParseFail, execParser)
 import Language.Frut.Syntax.Tok (Tok)
 import System.FilePath (replaceExtension, takeBaseName)
 import Test.Tasty
@@ -14,8 +14,8 @@ import Text.Show.Pretty
 
 test_Lexer :: IO TestTree
 test_Lexer = do
-  frutFiles <- findByExtension [".frut"] "test/golden"
-  pure . testGroup "FRUT lexer" $ do
+  frutFiles <- findByExtension [".frut"] "test/golden/lexer"
+  pure . testGroup "Lexer" $ do
     frutFile <- frutFiles
     return
       $ goldenVsString (takeBaseName frutFile) (replaceExtension frutFile ".golden.txt")
@@ -23,4 +23,4 @@ test_Lexer = do
         <$> readInputStream frutFile
 
 lex :: InputStream -> Either ParseFail [Spanned Tok]
-lex inputStream = execParser (lexTokens lexNonSpace) inputStream initPos 
+lex inputStream = execParser (lexTokens lexToken) inputStream initPos

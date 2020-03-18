@@ -2,7 +2,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 
--- | Data structure behind identifiers.
 module Language.Frut.Data.Ident
   ( Ident (..),
     mkIdent,
@@ -15,19 +14,17 @@ import Data.Data (Data)
 import Data.List (foldl')
 import Data.Semigroup as Sem
 import Data.String (IsString (..))
+import Data.String (String)
 import Data.Typeable (Typeable)
 import GHC.Generics (Generic)
 import GHC.Show (show)
 import Prelude hiding (show)
-import Data.String (String)
 
 -- | An identifier
 data Ident
   = Ident
       { -- | payload of the identifier
         name :: String,
-        -- | whether the identifier is raw
-        raw :: Bool,
         -- | hash for quick comparision
         hash :: {-# UNPACK #-} !Int
       }
@@ -42,14 +39,15 @@ instance IsString Ident where
 
 -- | Uses 'hash' to short-circuit
 instance Eq Ident where
-  i1 == i2 = hash i1 == hash i2 && name i1 == name i2 && raw i1 == raw i2
-  i1 /= i2 = hash i1 /= hash i2 || name i1 /= name i2 || raw i1 /= raw i2
+  i1 == i2 = hash i1 == hash i2 && name i1 == name i2
+  i1 /= i2 = hash i1 /= hash i2 || name i1 /= name i2
 
 -- | Uses 'hash' to short-circuit
 instance Ord Ident where
-  compare i1 i2 = case compare i1 i2 of
-    EQ -> compare (raw i1, name i1) (raw i2, name i2)
-    rt -> rt
+  compare i1 i2 =
+    case compare i1 i2 of
+      EQ -> compare (name i1) (name i2)
+      rt -> rt
 
 -- | "Forgets" about whether either argument was raw
 instance Monoid Ident where
@@ -57,12 +55,12 @@ instance Monoid Ident where
   mempty = mkIdent ""
 
 -- | "Forgets" about whether either argument was raw
-instance Sem.Semigroup Ident where
-  Ident n1 _ _ <> Ident n2 _ _ = mkIdent (n1 <> n2)
+instance Semigroup Ident where
+  Ident n1 _ <> Ident n2 _ = mkIdent (n1 <> n2)
 
 -- | Smart constructor for making an 'Ident'.
 mkIdent :: String -> Ident
-mkIdent s = Ident s False (hashString s)
+mkIdent s = Ident s (hashString s)
 
 -- | Hash a string into an 'Int'
 hashString :: String -> Int
