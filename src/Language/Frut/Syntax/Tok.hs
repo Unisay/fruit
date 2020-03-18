@@ -12,6 +12,8 @@ import Language.Frut.Data.Ident (Ident)
 
 data Tok
   = Module
+  | QualifiedLowerName String
+  | QualifiedUpperName String
   | Identifier Ident  
   | Space Space String
   | EOF

@@ -44,8 +44,8 @@ $idchar    = [$small $large $digit $uniidchar \']
 $pragmachar = [$small $large $digit]
 $docsym    = [\| \^ \* \$]
 
-@varid     = $small $idchar*          -- variable identifiers
-@conid     = $large $idchar*          -- constructor identifiers
+@lowerName = $small $idchar*          
+@upperName = $large $idchar*       
 @varsym    = ($symbol # \:) $symbol*  -- variable (operator) symbol
 @consym    = \: $symbol*              -- constructor (operator) symbol
 @numspc       = _*                    -- numeric spacer
@@ -55,11 +55,11 @@ $docsym    = [\| \^ \* \$]
 @hexadecimal  = $hexit(@numspc $hexit)*
 @exponent     = @numspc [eE] [\-\+]? @decimal
 @bin_exponent = @numspc [pP] [\-\+]? @decimal
-@qual = (@conid \.)+
-@qvarid = @qual @varid
-@qconid = @qual @conid
-@qvarsym = @qual @varsym
-@qconsym = @qual @consym
+@qualifier = (@upperName \.)+
+@qualifiedLowerName = @qualifier* @lowerName
+@qualifiedUpperName = @qualifier* @upperName
+@qvarsym = @qualifier @varsym
+@qconsym = @qualifier @consym
 @floating_point = @numspc @decimal \. @decimal @exponent? | @numspc @decimal @exponent
 @hex_floating_point = @numspc @hexadecimal \. @hexadecimal @bin_exponent? | @numspc @hexadecimal @bin_exponent
 -- normal signed numerical literals can only be explicitly negative,
@@ -75,11 +75,17 @@ $white+ { pure . Tok.Space Tok.Whitespace }
 
 "module" { token Tok.Module }
 
+@qualifiedUpperName { token1 Tok.QualifiedUpperName }
+@qualifiedLowerName { token1 Tok.QualifiedLowerName }
+
 {
 
 -- | Make a token.
 token :: Tok -> String -> P Tok
 token t _ = pure t
+
+token1 :: (String -> Tok) -> String -> P Tok
+token1 t s = pure (t s)
 
 -- | Lexer for one 'Token'. The only token this cannot produce is 'Interpolated'.
 lexToken :: P (Spanned Tok)
