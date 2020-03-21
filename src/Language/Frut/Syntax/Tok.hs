@@ -11,7 +11,10 @@ import GHC.Generics (Generic)
 import Language.Frut.Data.Ident (Ident)
 
 data Tok
-  = Module
+  = Indent
+  | Dedent
+  | Newline
+  | Module
   | Import
   | Export
   | LParen

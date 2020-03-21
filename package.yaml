@@ -54,22 +54,10 @@ executables:
 library:
   source-dirs:
     - src
-  exposed-modules:
-    - Language.Frut.Data.InputStream
-    - Language.Frut.Data.Position
-    - Language.Frut.Lexer
-    - Language.Frut.Parser.Monad
-    - Language.Frut.Parser
-    - Language.Frut.Syntax.AST
-    - Language.Frut.Syntax.Tok
-  other-modules:
-    - Language.Frut.Alex
-    - Language.Frut.Data.Ident
-    - Language.Frut.Parser.Internal
   dependencies:
     - array
-    - deepseq
     - bytestring
+    - deepseq
     - pathtype
     - text
     - utf8-string
@@ -83,7 +71,10 @@ tests:
       - frut
       - filepath
       - pretty-show
+      - hspec
+      - hspec-expectations-pretty-diff
       - tasty
+      - tasty-hspec
       - tasty-golden
       - tasty-discover
       - tasty-hedgehog

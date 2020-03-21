@@ -6,6 +6,7 @@ import qualified Language.Frut.Syntax.Tok as Tok
 import Language.Frut.Alex
 import Language.Frut.Lexer
 import Language.Frut.Data.Position
+import Language.Frut.Data.Span
 import Language.Frut.Parser.Monad
 import Language.Frut.Syntax.Tok
 import Relude.Unsafe ((!!))
@@ -20,7 +21,6 @@ import qualified Data.List.NonEmpty as NEL
 %expect 0
 %token 
   '.'      { Spanned Tok.Dot _ }
-  ws       { Spanned (Tok.Space Tok.Whitespace) _ }
   module   { Spanned Tok.Module _ }
   upperId  { Spanned (Tok.UpperId $$) _ }
   lowerId  { Spanned (Tok.LowerId $$) _ }
@@ -29,7 +29,7 @@ import qualified Data.List.NonEmpty as NEL
 %%
 
 Module 
-  : module ws UpperIds { AST.Module $3 }
+  : module UpperIds { AST.Module $2 }
 
 UpperIds 
   : upperId                 { pure $1 }

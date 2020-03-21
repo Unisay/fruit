@@ -4,6 +4,7 @@
 module Frutc where
 
 import GHC.IO.Encoding (setLocaleEncoding, utf8)
+import qualified Language.Frut.Data.InputStream as InputStream
 import qualified Language.Frut.Parser as Parser
 import qualified Language.Frut.Syntax.AST as AST
 import Options.Applicative ((<**>), (<|>))
@@ -11,15 +12,14 @@ import qualified Options.Applicative as O
 import System.IO (stdin)
 import qualified System.Path as Path
 import Text.Show.Pretty (pPrint)
-import Language.Frut.Data.InputStream (readInputStream, hReadInputStream)
 
 main :: IO ()
 main = do
   setLocaleEncoding utf8
   Args {argsInput} <- O.execParser argsInfo
   sourceCode <- case argsInput of
-    StdInput -> hReadInputStream stdin
-    FileInput file -> readInputStream (Path.toString file)
+    StdInput -> InputStream.readHandle stdin
+    FileInput file -> InputStream.readFile (Path.toString file)
   pPrint . Parser.parse @AST.SourceFile $ sourceCode
 
 argsInfo :: O.ParserInfo Args

@@ -1,5 +1,6 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE Rank2Types #-}
 
 module Language.Frut.Parser.Monad
@@ -7,7 +8,6 @@ module Language.Frut.Parser.Monad
     P,
     execParser,
     execParser',
-    initPos,
     PState (..),
 
     -- * Monadic operations
@@ -28,20 +28,18 @@ module Language.Frut.Parser.Monad
 where
 
 import Control.Exception (Exception)
-import Control.Monad.Fail as Fail
+import Control.Monad.Fail (MonadFail (fail))
 import Data.Maybe (listToMaybe)
 import Data.String (unwords)
 import Data.Typeable (Typeable)
 import GHC.Show (showParen, showString, showsPrec)
 import Language.Frut.Data.InputStream (InputStream)
-import Language.Frut.Data.Position
-  ( Position,
-    Spanned,
-    initPos,
-    prettyPosition,
-  )
+import Language.Frut.Data.Position (Position)
+import qualified Language.Frut.Data.Position as Pos
+import Language.Frut.Data.Span (Spanned)
 import Language.Frut.Syntax.Tok (Tok)
-import Prelude hiding (unwords)
+import Numeric.Natural (Natural)
+import Prelude hiding (fail, unwords)
 
 -- | Parsing and lexing monad. A value of type @'P' a@ represents a parser that can be run (using
 -- 'execParser') to possibly produce a value of type @a@.
@@ -63,7 +61,9 @@ data PState
         -- | the current input
         curInput :: !InputStream,
         -- | position at previous input location
-        prevPos :: Position,
+        prevPos :: Maybe Position,
+        -- | Indentation stack
+        pushedIndents :: [Natural],
         -- | tokens manually pushed by the user
         pushedTokens :: [Spanned Tok],
         -- | function to swap token
@@ -87,7 +87,7 @@ instance Monad P where
     let pOk' x s' = unParser (k x) s' pOk pFailed
      in unParser m s pOk' pFailed
 
-instance Fail.MonadFail P where
+instance MonadFail P where
   fail msg = P $ \ !s _ pFailed -> pFailed msg (curPos s)
 
 -- | Exceptions that occur during parsing
@@ -101,7 +101,7 @@ instance Show ParseFail where
       err =
         unwords
           [ "parse failure at",
-            prettyPosition pos,
+            Pos.prettyPrint pos,
             "(" ++ msg ++ ")"
           ]
 
@@ -112,9 +112,15 @@ instance Exception ParseFail
 execParser :: P a -> InputStream -> Position -> Either ParseFail a
 execParser p input pos = execParser' p input pos id
 
--- | Generalized version of 'execParser' that expects an extra argument that lets you hot-swap a
--- token that was just lexed before it gets passed to the parser.
-execParser' :: P a -> InputStream -> Position -> (Tok -> Tok) -> Either ParseFail a
+-- | Generalized version of 'execParser' that expects an extra argument
+--  that lets you hot-swap a token that was just lexed before it gets passed
+-- to the parser.
+execParser' ::
+  P a ->
+  InputStream ->
+  Position ->
+  (Tok -> Tok) ->
+  Either ParseFail a
 execParser' parser input pos swapFunc =
   unParser
     parser
@@ -126,7 +132,8 @@ execParser' parser input pos swapFunc =
       PState
         { curPos = pos,
           curInput = input,
-          prevPos = error "ParseMonad.execParser: Touched undefined position!",
+          prevPos = Nothing,
+          pushedIndents = [1],
           pushedTokens = [],
           swapFunction = swapFunc
         }
@@ -163,18 +170,25 @@ getInput = curInput <$> getPState
 setInput :: InputStream -> P ()
 setInput i = modifyPState $ \s -> s {curInput = i}
 
--- | Manually push a @'Spanned' 'Tok'@. This turns out to be useful when parsing tokens that need
--- to be broken up. For example, when seeing a 'Language.Rust.Syntax.GreaterEqual' token but only
--- expecting a 'Language.Rust.Syntax.Greater' token, one can consume the
--- 'Language.Rust.Syntax.GreaterEqual' token and push back an 'Language.Rust.Syntax.Equal' token.
+-- | Manually push a @'Spanned' 'Tok'@.
 pushToken :: Spanned Tok -> P ()
-pushToken tok = modifyPState $ \s@PState {pushedTokens = toks} -> s {pushedTokens = tok : toks}
+pushToken tok =
+  modifyPState $ \s@PState {pushedTokens} ->
+    s {pushedTokens = tok : pushedTokens}
 
--- | Manually pop a @'Spanned' 'Tok'@ (if there are no tokens to pop, returns 'Nothing'). See
--- 'pushToken' for more details.
+-- | Manually pop a @'Spanned' 'Tok'@
+-- (if there are no tokens to pop, returns 'Nothing').
+-- See 'pushToken' for more details.
 popToken :: P (Maybe (Spanned Tok))
-popToken = P $ \ !s@PState {pushedTokens = toks} pOk _ -> pOk (listToMaybe toks) s {pushedTokens = drop 1 toks}
+popToken = P $ \ !parserState@PState {pushedTokens} pOk _ ->
+  pOk
+    (listToMaybe pushedTokens)
+    parserState {pushedTokens = drop 1 pushedTokens}
 
 -- | Signal a syntax error.
 parseError :: Show b => b -> P a
-parseError b = Fail.fail ("Syntax error: the symbol `" ++ show b ++ "' does not fit here")
+parseError b =
+  fail
+    ( "Syntax error: the symbol `" <> show b
+        <> "' does not fit here"
+    )

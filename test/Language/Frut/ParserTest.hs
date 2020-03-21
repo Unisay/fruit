@@ -2,7 +2,7 @@
 
 module Language.Frut.ParserTest where
 
-import Language.Frut.Data.InputStream (readInputStream)
+import qualified Language.Frut.Data.InputStream as InputStream
 import Language.Frut.Parser (parse)
 import qualified Language.Frut.Syntax.AST as AST
 import System.FilePath (replaceExtension, takeBaseName)
@@ -18,4 +18,4 @@ test_Parser = do
     return
       $ goldenVsString (takeBaseName frutFile) (replaceExtension frutFile ".golden.txt")
       $ encodeUtf8 @String @LByteString . ppShow . parse @AST.SourceFile
-        <$> readInputStream frutFile
+        <$> InputStream.readFile frutFile

@@ -6,11 +6,12 @@
 
 module Language.Frut.Lexer where
 
-import Language.Frut.Parser.Monad 
-import Language.Frut.Data.Ident
-import Language.Frut.Data.Position (Spanned(..), Span(..))
-import Language.Frut.Data.InputStream (peekChars, inputStreamEmpty, takeChar)
 import Language.Frut.Alex
+import Language.Frut.Data.Ident
+import Language.Frut.Data.Span (Spanned(..), Span(..))
+import Language.Frut.Data.InputStream (peekChars, inputStreamEmpty, takeChar)
+import Language.Frut.Lexer.Util
+import Language.Frut.Parser.Monad 
 import Language.Frut.Syntax.Tok (Tok)
 import qualified Language.Frut.Syntax.Tok as Tok
 import Prelude hiding (head)
@@ -66,7 +67,8 @@ $docsym    = [\| \^ \* \$]
 
 frut :-
 
-$white+ { token (Tok.Space Tok.Whitespace) }
+$nl$white_no_nl* { startWhite }
+$white_no_nl+ ;
 "module" { token Tok.Module }
 "." { token Tok.Dot }
 "(" { token Tok.LParen }
@@ -75,46 +77,36 @@ $white+ { token (Tok.Space Tok.Whitespace) }
 "export" { token Tok.Export }
 "let" { token Tok.Let }
 "in" { token Tok.In }
-@lowerId { pure . Tok.LowerId . mkIdent }
-@upperId { pure . Tok.UpperId . mkIdent }
+@lowerId { tokenStr (Tok.LowerId . mkIdent) }
+@upperId { tokenStr (Tok.UpperId . mkIdent) }
 
 {
-
--- | Make a token.
-token :: Tok -> String -> P Tok
-token t _ = pure t
 
 -- | Lexer for one 'Token'. The only token this cannot produce is 'Interpolated'.
 lexToken :: P (Spanned Tok)
 lexToken = popToken >>= \case
-  Just tok -> pure tok
+  Just spanned@(Spanned _ mbSpan) -> do
+    traverse_ (setPosition . hi) mbSpan
+    pure spanned
   Nothing -> do
     pos <- getPosition
     inp <- getInput
     case alexScan (pos, inp) 0 of
-      AlexEOF -> 
-        pure (Spanned Tok.EOF (Span pos pos))
-      AlexError _ -> 
-        fail "lexical error"
-      AlexSkip (pos', inp') _ -> 
-        setPosition pos' *> 
-        setInput inp' *> 
-        lexToken
+      AlexEOF -> pure (Spanned Tok.EOF (Just $ Span pos pos))
+      AlexError _ -> fail "lexical error"
+      AlexSkip (pos', inp') _ -> setPosition pos' *> setInput inp' *> lexToken
       AlexToken (pos', inp') len action -> do
         setPosition pos'
         setInput inp'
-        tok <- action (peekChars len inp)
-        tok' <- swapToken tok
-        pos'' <- getPosition
-        return (Spanned tok' (Span pos pos''))
+        spannedTok <- action (Span pos pos') len (peekChars len inp)
+        return spannedTok
 
--- | Lexer for one non-whitespace 'Token'. The only tokens this cannot produce are 'Interpolated'
+-- | Lexer for one non-whitespace 'Token'. 
 -- and 'Space' (which includes comments that aren't doc comments).
 lexNonSpace :: P (Spanned Tok)
 lexNonSpace = lexToken >>= \case
   Spanned Tok.Space {} _ -> lexNonSpace
   tok -> pure tok
-
 
 -- | Apply the given lexer repeatedly until (but not including) the 'Eof' token.
 -- Meant for debugging purposes - in general this defeats the point of a threaded lexer.
@@ -125,14 +117,16 @@ lexTokens lexer = do
     Spanned Tok.EOF _ -> pure []
     _ -> (tok :) <$> lexTokens lexer
 
--- | Retrieve the next character (if there is one), without updating the parser state.
+-- | Retrieve the next character (if there is one), 
+-- without updating the parser state.
 peekChar :: P (Maybe Char)
 peekChar = do
   inp <- getInput
-  if inputStreamEmpty inp 
+  if inputStreamEmpty inp
     then pure Nothing
-    else let (c, _) = takeChar inp
-         in pure (Just c)
+    else
+      let (c, _) = takeChar inp
+       in pure (Just c)
 
 -- | Signal a lexical error.
 lexicalError :: P a
