@@ -36,12 +36,12 @@ spec_Lexer = do
     it "module" $
       lexString " module "
         `shouldBe` Right [spanned (1, 1, 2) (7, 1, 8) Tok.Module]
-    it "import" $
-      lexString " import "
-        `shouldBe` Right [spanned (1, 1, 2) (7, 1, 8) Tok.Import]
-    it "export" $
-      lexString " export "
-        `shouldBe` Right [spanned (1, 1, 2) (7, 1, 8) Tok.Export]
+    it "imports" $
+      lexString " imports "
+        `shouldBe` Right [spanned (1, 1, 2) (8, 1, 9) Tok.Imports]
+    it "exports" $
+      lexString " exports "
+        `shouldBe` Right [spanned (1, 1, 2) (8, 1, 9) Tok.Exports]
     it "let" $
       lexString " let "
         `shouldBe` Right [spanned (1, 1, 2) (4, 1, 5) Tok.Let]
@@ -61,8 +61,7 @@ spec_Lexer = do
     it "inserts indent" $ do
       lexString "\n  ident"
         `shouldBe` Right
-          [ spanned (0, 1, 1) (1, 2, 1) Tok.Newline,
-            spanned (1, 2, 1) (3, 2, 3) Tok.Indent,
+          [ spanned (1, 2, 1) (3, 2, 3) Tok.Indent,
             spanned (3, 2, 3) (8, 2, 8) (Tok.LowerId "ident")
           ]
     it "inserts nested dedent" $ do
@@ -75,23 +74,17 @@ spec_Lexer = do
       -}
       lexString s
         `shouldBe` Right
-          [ spanned (0, 1, 1) (1, 2, 1) Tok.Newline,
-            spanned (1, 2, 1) (3, 2, 3) Tok.Indent,
+          [ spanned (1, 2, 1) (3, 2, 3) Tok.Indent,
             spanned (3, 2, 3) (4, 2, 4) (Tok.LowerId "a"),
-            spanned (5, 2, 5) (6, 3, 1) Tok.Newline,
             spanned (6, 3, 1) (10, 3, 5) Tok.Indent,
             spanned (10, 3, 5) (11, 3, 6) (Tok.LowerId "b"),
-            spanned (11, 3, 6) (12, 4, 1) Tok.Newline,
-            Spanned Tok.Dedent Nothing,
-            Spanned Tok.Dedent Nothing,
+            spanned (12, 4, 1) (12, 4, 1) Tok.Dedent,
+            spanned (12, 4, 1) (12, 4, 1) Tok.Dedent,
             spanned (12, 4, 1) (13, 4, 2) (Tok.LowerId "c")
           ]
     it "skips whitespace" $
       lexString "  \n  "
-        `shouldBe` Right
-          [ spanned (2, 1, 3) (3, 2, 1) Tok.Newline,
-            spanned (3, 2, 1) (5, 2, 3) Tok.Indent
-          ]
+        `shouldBe` Right [spanned (3, 2, 1) (5, 2, 3) Tok.Indent]
 
 -- Test utils:
 

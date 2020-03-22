@@ -69,12 +69,15 @@ frut :-
 
 $nl$white_no_nl* { startWhite }
 $white_no_nl+ ;
+"--".* ;
 "module" { token Tok.Module }
+"-" { token Tok.Dash }
 "." { token Tok.Dot }
+"," { token Tok.Comma }
 "(" { token Tok.LParen }
 ")" { token Tok.RParen }
-"import" { token Tok.Import }
-"export" { token Tok.Export }
+"imports" { token Tok.Imports }
+"exports" { token Tok.Exports }
 "let" { token Tok.Let }
 "in" { token Tok.In }
 @lowerId { tokenStr (Tok.LowerId . mkIdent) }

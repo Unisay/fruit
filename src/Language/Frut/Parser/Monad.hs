@@ -19,7 +19,6 @@ module Language.Frut.Parser.Monad
     setInput,
     popToken,
     pushToken,
-    swapToken,
 
     -- * Error reporting
     ParseFail (..),
@@ -65,10 +64,9 @@ data PState
         -- | Indentation stack
         pushedIndents :: [Natural],
         -- | tokens manually pushed by the user
-        pushedTokens :: [Spanned Tok],
-        -- | function to swap token
-        swapFunction :: Tok -> Tok
+        pushedTokens :: [Spanned Tok]
       }
+  deriving (Show)
 
 instance Functor P where
   fmap f m = P $ \ !s pOk pFailed -> unParser m s (pOk . f) pFailed
@@ -110,7 +108,7 @@ instance Exception ParseFail
 -- | Execute the given parser on the supplied input stream at the given start position, returning
 -- either the position of an error and the error message, or the value parsed.
 execParser :: P a -> InputStream -> Position -> Either ParseFail a
-execParser p input pos = execParser' p input pos id
+execParser p input pos = execParser' p input pos
 
 -- | Generalized version of 'execParser' that expects an extra argument
 --  that lets you hot-swap a token that was just lexed before it gets passed
@@ -119,9 +117,8 @@ execParser' ::
   P a ->
   InputStream ->
   Position ->
-  (Tok -> Tok) ->
   Either ParseFail a
-execParser' parser input pos swapFunc =
+execParser' parser input pos =
   unParser
     parser
     initialState
@@ -134,13 +131,8 @@ execParser' parser input pos swapFunc =
           curInput = input,
           prevPos = Nothing,
           pushedIndents = [1],
-          pushedTokens = [],
-          swapFunction = swapFunc
+          pushedTokens = []
         }
-
--- | Swap a token using the swap function.
-swapToken :: Tok -> P Tok
-swapToken t = P $ \ !s@PState {swapFunction = f} pOk _ -> pOk (f $! t) s
 
 -- | Extract the state stored in the parser.
 getPState :: P PState
@@ -188,7 +180,5 @@ popToken = P $ \ !parserState@PState {pushedTokens} pOk _ ->
 -- | Signal a syntax error.
 parseError :: Show b => b -> P a
 parseError b =
-  fail
-    ( "Syntax error: the symbol `" <> show b
-        <> "' does not fit here"
-    )
+  fail $
+    "Syntax error: unexpected token `" <> show b <> "`"

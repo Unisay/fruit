@@ -1,1 +1,10 @@
-Right (SourceFile (Module ("Hello" :| [ "Wonderful" , "World" ])))
+Right
+  (SourceFile
+     (Module
+        ("Hello" :| [ "Wonderful" , "World" ])
+        (Exports ("export1" :| [ "export2" , "export3" ]))
+        [ Import ("Example" :| [ "Import0" ]) []
+        , Import ("Example" :| [ "Import1" ]) [ "foo" ]
+        , Import ("Example" :| [ "Import2" ]) [ "bar" , "baz" ]
+        , Import ("Example" :| [ "Import3" ]) [ "f1" , "f2" , "f3" ]
+        ]))

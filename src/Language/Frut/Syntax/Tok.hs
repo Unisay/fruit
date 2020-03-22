@@ -15,15 +15,17 @@ data Tok
   | Dedent
   | Newline
   | Module
-  | Import
-  | Export
+  | Imports
+  | Exports
   | LParen
   | RParen
   | UpperId Ident
-  | LowerId Ident  
+  | LowerId Ident
   | Let
   | In
+  | Dash
   | Dot
+  | Comma
   | Space Space
   | EOF
   deriving (Eq, Show)
