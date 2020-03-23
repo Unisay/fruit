@@ -43,9 +43,9 @@ $octit     = 0-7
 $hexit     = [$decdigit A-F a-f]
 $uniidchar = \x07 -- Trick Alex into handling Unicode. See [Unicode in Alex].
 $idchar    = [$lower $upper $digit $uniidchar \']
-$pragmachar = [$lower $upper $digit]
-$docsym    = [\| \^ \* \$]
 
+@commentStart = \{ \-
+@commentEnd = \- \}
 @lowerId = $lower $idchar*          
 @upperId = $upper $idchar*       
 @numspc       = _*                    -- numeric spacer
@@ -67,21 +67,25 @@ $docsym    = [\| \^ \* \$]
 
 frut :-
 
-$nl$white_no_nl* { startWhite }
-$white_no_nl+ ;
-"--".* ;
-"module" { token Tok.Module }
-"-" { token Tok.Dash }
-"." { token Tok.Dot }
-"," { token Tok.Comma }
-"(" { token Tok.LParen }
-")" { token Tok.RParen }
-"imports" { token Tok.Imports }
-"exports" { token Tok.Exports }
-"let" { token Tok.Let }
-"in" { token Tok.In }
-@lowerId { tokenStr (Tok.LowerId . mkIdent) }
-@upperId { tokenStr (Tok.UpperId . mkIdent) }
+<0> $nl$white_no_nl* { startWhite }
+<0> $white_no_nl+ ;
+<0> "--".* ;
+<0> @commentStart { setMode comment  }
+<comment> @commentEnd { setMode 0 }
+<comment> [. \n ] ;
+
+<0> "module" { token Tok.Module }
+<0> "-" { token Tok.Dash }
+<0> "." { token Tok.Dot }
+<0> "," { token Tok.Comma }
+<0> "(" { token Tok.LParen }
+<0> ")" { token Tok.RParen }
+<0> "imports" { token Tok.Imports }
+<0> "exports" { token Tok.Exports }
+<0> "let" { token Tok.Let }
+<0> "in" { token Tok.In }
+<0> @lowerId { tokenStr (Tok.LowerId . mkIdent) }
+<0> @upperId { tokenStr (Tok.UpperId . mkIdent) }
 
 {
 
@@ -94,15 +98,18 @@ lexToken = popToken >>= \case
   Nothing -> do
     pos <- getPosition
     inp <- getInput
-    case alexScan (pos, inp) 0 of
+    sc <- getStartCode
+    case alexScan (pos, inp) sc of
       AlexEOF -> pure (Spanned Tok.EOF (Just $ Span pos pos))
-      AlexError _ -> fail "lexical error"
-      AlexSkip (pos', inp') _ -> setPosition pos' *> setInput inp' *> lexToken
+      AlexError _ -> lexicalError
+      AlexSkip (pos', inp') _ -> 
+        setPosition pos' *> setInput inp' *> lexToken
       AlexToken (pos', inp') len action -> do
         setPosition pos'
         setInput inp'
-        spannedTok <- action (Span pos pos') len (peekChars len inp)
-        return spannedTok
+        let top = peekChars len inp
+        spannedTok <- action (Span pos pos') len top
+        maybe lexToken pure spannedTok
 
 -- | Lexer for one non-whitespace 'Token'. 
 -- and 'Space' (which includes comments that aren't doc comments).
@@ -133,9 +140,14 @@ peekChar = do
 
 -- | Signal a lexical error.
 lexicalError :: P a
-lexicalError = do
-  c <- peekChar
-  fail ("Lexical error: the character " ++ show c ++ " does not fit here")
+lexicalError = peekChar >>= \case
+  Nothing -> 
+    fail "Lexical error"
+  Just c -> 
+    fail ("The character " <> show c <> " does not fit here")
+
+setMode :: Int -> AlexAction
+setMode code _ _ _ = setStartCode code $> Nothing
 
 }
 

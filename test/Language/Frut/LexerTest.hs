@@ -57,7 +57,7 @@ spec_Lexer = do
     it "')'" $
       lexString " ) "
         `shouldBe` Right [spanned (1, 1, 2) (2, 1, 3) Tok.RParen]
-  describe "handles significant whitespace" $ do
+  describe "handles whitespace:" $ do
     it "inserts indent" $
       lexString "\n  ident"
         `shouldBe` Right
@@ -82,9 +82,18 @@ spec_Lexer = do
             spanned (12, 4, 1) (12, 4, 1) Tok.Dedent,
             spanned (12, 4, 1) (13, 4, 2) (Tok.LowerId "c")
           ]
-    it "skips whitespace" $
+    it "ignores whitespace" $
       lexString "  \n  "
         `shouldBe` Right [spanned (3, 2, 1) (5, 2, 3) Tok.Indent]
+    it "ignores line comments" $ do
+      lexString " -- comment" `shouldBe` Right []
+      lexString "---" `shouldBe` Right []
+    it "ignores block comments" $
+      lexString "ok {- \n\n -} cool"
+        `shouldBe` Right
+          [ spanned (0, 1, 1) (2, 1, 3) (Tok.LowerId "ok"),
+            spanned (12, 3, 5) (16, 3, 9) (Tok.LowerId "cool")
+          ]
 
 -- Test utils:
 

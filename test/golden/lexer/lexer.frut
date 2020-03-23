@@ -1,4 +1,6 @@
-module   Hello hello Hello.Wonderful.World HELLO.WORLD
+module {- new module 
+
+-} Hello hello Hello.Wonderful.World HELLO.WORLD
 let 
   blah blah
 in 

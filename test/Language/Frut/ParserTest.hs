@@ -16,6 +16,8 @@ test_Parser = do
   pure . testGroup "Parser" $ do
     frutFile <- frutFiles
     return
-      $ goldenVsString (takeBaseName frutFile) (replaceExtension frutFile ".golden.txt")
+      $ goldenVsString
+        (takeBaseName frutFile)
+        (replaceExtension frutFile ".golden.txt")
       $ encodeUtf8 @String @LByteString . ppShow . parse @AST.SourceFile
         <$> InputStream.readFile frutFile

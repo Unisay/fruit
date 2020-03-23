@@ -8,16 +8,16 @@ import Language.Frut.Parser.Monad
 import qualified Language.Frut.Syntax.Tok as Tok
 import Language.Frut.Syntax.Tok (Tok)
 
-type AlexAction = Span -> Int -> String -> P (Spanned Tok)
+type AlexAction = Span -> Int -> String -> P (Maybe (Spanned Tok))
 
 -- | Make a token.
 token :: Tok -> AlexAction
 token tok span _ _ =
-  pure $ Spanned tok (Just span)
+  pure . Just $ Spanned tok (Just span)
 
 tokenStr :: (String -> Tok) -> AlexAction
 tokenStr f span _ str =
-  pure $ Spanned (f str) (Just span)
+  pure . Just $ Spanned (f str) (Just span)
 
 startWhite :: AlexAction
 startWhite span@(Span startPos lastPos) n _ = do
@@ -29,7 +29,7 @@ startWhite span@(Span startPos lastPos) n _ = do
       GT -> do
         setPState parserState {pushedIndents = indent : indents}
         let startPos' = Pos.moveBack (pred indent) lastPos
-        return $ Spanned Tok.Indent (Just $ Span startPos' lastPos)
+        pure . Just $ Spanned Tok.Indent (Just $ Span startPos' lastPos)
       LT ->
         case List.span (> indent) indents of
           (pre, []) ->
@@ -49,7 +49,7 @@ startWhite span@(Span startPos lastPos) n _ = do
                     { pushedIndents = post,
                       pushedTokens = remainingDedents -- TODO: prepend
                     }
-                return dedent
+                pure . Just $ dedent
       EQ ->
-        return . Spanned Tok.Newline . Just $
+        pure . Just . Spanned Tok.Newline . Just $
           Span.mapHi (const $ Pos.newline startPos) span

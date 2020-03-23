@@ -12,6 +12,8 @@ module Language.Frut.Parser.Monad
     -- * Monadic operations
     getPState,
     setPState,
+    getStartCode,
+    setStartCode,
     getPosition,
     setPosition,
     getInput,
@@ -54,6 +56,8 @@ data PState
         curPos :: !Position,
         -- | the current input
         curInput :: !InputStream,
+        -- | Alex's start code
+        startCode :: !Int,
         -- | position at previous input location
         prevPos :: Maybe Position,
         -- | Indentation stack
@@ -112,6 +116,7 @@ execParser parser input pos =
       PState
         { curPos = pos,
           curInput = input,
+          startCode = 0,
           prevPos = Nothing,
           pushedIndents = [1],
           pushedTokens = []
@@ -124,6 +129,14 @@ getPState = P $ \ !s pOk _ -> pOk s s
 -- | Update the state stored in the parser.
 setPState :: PState -> P ()
 setPState s = P $ \_ pOk _ -> pOk () s
+
+-- | Get Alex's start code'
+getStartCode :: P Int
+getStartCode = startCode <$> getPState
+
+-- | Set Alex's start code
+setStartCode :: Int -> P ()
+setStartCode sc = modifyPState (\s -> s {startCode = sc})
 
 -- | Modify the state stored in the parser.
 modifyPState :: (PState -> PState) -> P ()
