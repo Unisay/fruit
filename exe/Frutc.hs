@@ -7,9 +7,7 @@ import GHC.IO.Encoding (setLocaleEncoding, utf8)
 import qualified Language.Frut.Data.InputStream as InputStream
 import qualified Language.Frut.Parser as Parser
 import qualified Language.Frut.Syntax.AST as AST
-import Options.Applicative ((<**>), (<|>))
 import qualified Options.Applicative as O
-import System.IO (stdin)
 import qualified System.Path as Path
 import Text.Show.Pretty (pPrint)
 
@@ -35,10 +33,7 @@ data Input
   = FileInput Path.AbsRelFile
   | StdInput
 
-data Args
-  = Args
-      { argsInput :: Input
-      }
+newtype Args = Args {argsInput :: Input}
 
 argsParser :: O.Parser Args
 argsParser = Args <$> input

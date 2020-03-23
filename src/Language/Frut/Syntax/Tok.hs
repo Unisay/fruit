@@ -4,10 +4,7 @@
 
 module Language.Frut.Syntax.Tok where
 
-import Control.DeepSeq (NFData)
 import Data.Data (Data)
-import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
 import Language.Frut.Data.Ident (Ident)
 
 data Tok

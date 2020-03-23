@@ -8,15 +8,8 @@ module Language.Frut.Data.Ident
   )
 where
 
-import Control.DeepSeq (NFData)
-import Data.Char (ord)
 import Data.Data (Data)
-import Data.List (foldl')
 import Data.Semigroup as Sem
-import Data.String (IsString (..))
-import Data.String (String)
-import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
 import GHC.Show (show)
 import Prelude hiding (show)
 

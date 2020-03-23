@@ -58,7 +58,7 @@ spec_Lexer = do
       lexString " ) "
         `shouldBe` Right [spanned (1, 1, 2) (2, 1, 3) Tok.RParen]
   describe "handles significant whitespace" $ do
-    it "inserts indent" $ do
+    it "inserts indent" $
       lexString "\n  ident"
         `shouldBe` Right
           [ spanned (1, 2, 1) (3, 2, 3) Tok.Indent,

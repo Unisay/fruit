@@ -13,10 +13,7 @@ module Language.Frut.Data.Span
   )
 where
 
-import Control.DeepSeq (NFData)
 import Data.Data (Data)
-import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
 import GHC.Show (show, showParen, showString, showsPrec)
 import Language.Frut.Data.Position (Position)
 import Prelude hiding (show)

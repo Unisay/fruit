@@ -20,10 +20,7 @@ module Language.Frut.Data.Position
   )
 where
 
-import Control.DeepSeq (NFData)
 import Data.Data (Data)
-import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
 import GHC.Show (show, showParen, showString, showsPrec)
 import Prelude hiding (show)
 
@@ -82,7 +79,7 @@ moveUp n pos@Position {absoluteOffset = o, row = r} =
 
 {-# INLINE newline #-}
 newline :: Position -> Position
-newline pos@Position {absoluteOffset = o, row = r, col = c} =
+newline pos@Position {absoluteOffset = o, row = r} =
   pos {absoluteOffset = succ o, row = succ r, col = 1}
 
 {-# INLINE moveBack #-}

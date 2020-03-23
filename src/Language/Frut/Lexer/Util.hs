@@ -1,5 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
-
 module Language.Frut.Lexer.Util where
 
 import qualified Data.List as List
@@ -22,7 +20,7 @@ tokenStr f span _ str =
   pure $ Spanned (f str) (Just span)
 
 startWhite :: AlexAction
-startWhite span@(Span startPos curPos) n _ = do
+startWhite span@(Span startPos lastPos) n _ = do
   let indent = toEnum n
   parserState <- getPState
   case pushedIndents parserState of
@@ -30,9 +28,9 @@ startWhite span@(Span startPos curPos) n _ = do
     indents@(currentIndent : _) -> case compare indent currentIndent of
       GT -> do
         setPState parserState {pushedIndents = indent : indents}
-        let startPos' = Pos.moveBack (pred indent) curPos
-        return $ Spanned Tok.Indent (Just $ Span startPos' curPos)
-      LT -> do
+        let startPos' = Pos.moveBack (pred indent) lastPos
+        return $ Spanned Tok.Indent (Just $ Span startPos' lastPos)
+      LT ->
         case List.span (> indent) indents of
           (pre, []) ->
             fail $
@@ -41,7 +39,7 @@ startWhite span@(Span startPos curPos) n _ = do
           (pre, post) -> do
             let mkDedent :: Natural -> Spanned Tok
                 mkDedent _ =
-                  let pos = curPos
+                  let pos = lastPos
                    in Spanned Tok.Dedent $ Just $ Span pos pos
             case uncons (mkDedent <$> pre) of
               Nothing -> error "Impossible happened: expected dedent"

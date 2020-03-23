@@ -1,7 +1,5 @@
 module Language.Frut.Alex where
 
-import Data.Char (chr)
-import Data.Word (Word8)
 import qualified Language.Frut.Data.InputStream as IS
 import qualified Language.Frut.Data.Position as Pos
 

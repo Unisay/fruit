@@ -7,7 +7,6 @@ module Language.Frut.Parser.Monad
   ( -- * Parsing monad
     P,
     execParser,
-    execParser',
     PState (..),
 
     -- * Monadic operations
@@ -26,18 +25,14 @@ module Language.Frut.Parser.Monad
   )
 where
 
-import Control.Exception (Exception)
 import Control.Monad.Fail (MonadFail (fail))
-import Data.Maybe (listToMaybe)
 import Data.String (unwords)
-import Data.Typeable (Typeable)
 import GHC.Show (showParen, showString, showsPrec)
 import Language.Frut.Data.InputStream (InputStream)
 import Language.Frut.Data.Position (Position)
 import qualified Language.Frut.Data.Position as Pos
 import Language.Frut.Data.Span (Spanned)
 import Language.Frut.Syntax.Tok (Tok)
-import Numeric.Natural (Natural)
 import Prelude hiding (fail, unwords)
 
 -- | Parsing and lexing monad. A value of type @'P' a@ represents a parser that can be run (using
@@ -105,20 +100,8 @@ instance Show ParseFail where
 
 instance Exception ParseFail
 
--- | Execute the given parser on the supplied input stream at the given start position, returning
--- either the position of an error and the error message, or the value parsed.
 execParser :: P a -> InputStream -> Position -> Either ParseFail a
-execParser p input pos = execParser' p input pos
-
--- | Generalized version of 'execParser' that expects an extra argument
---  that lets you hot-swap a token that was just lexed before it gets passed
--- to the parser.
-execParser' ::
-  P a ->
-  InputStream ->
-  Position ->
-  Either ParseFail a
-execParser' parser input pos =
+execParser parser input pos =
   unParser
     parser
     initialState
@@ -172,7 +155,7 @@ pushToken tok =
 -- (if there are no tokens to pop, returns 'Nothing').
 -- See 'pushToken' for more details.
 popToken :: P (Maybe (Spanned Tok))
-popToken = P $ \ !parserState@PState {pushedTokens} pOk _ ->
+popToken = P $ \parserState@PState {pushedTokens} pOk _ ->
   pOk
     (listToMaybe pushedTokens)
     parserState {pushedTokens = drop 1 pushedTokens}

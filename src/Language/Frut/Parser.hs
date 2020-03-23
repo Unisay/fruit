@@ -25,7 +25,6 @@ module Language.Frut.Parser
 where
 
 import Control.Exception (throw)
-import Data.Foldable (traverse_)
 import Language.Frut.Data.InputStream (InputStream)
 import qualified Language.Frut.Data.InputStream as InputStream
 import Language.Frut.Data.Position (Position)
@@ -43,7 +42,6 @@ import Language.Frut.Parser.Monad
   )
 import qualified Language.Frut.Syntax.AST as AST
 import Language.Frut.Syntax.Tok as Tok
-import System.IO (Handle)
 
 -- | Parse something from an input stream (it is assumed the initial position is 'initPos').
 --
