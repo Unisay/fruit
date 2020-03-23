@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Language.Frut.LexerTest where
@@ -32,7 +33,7 @@ test_golden = do
 
 spec_Lexer :: Spec
 spec_Lexer = do
-  describe "recognizes lexemes:" $ do
+  describe "recognizes lexemes:" do
     it "module" $
       lexString " module "
         `shouldBe` Right [spanned (1, 1, 2) (7, 1, 8) Tok.Module]
@@ -57,14 +58,14 @@ spec_Lexer = do
     it "')'" $
       lexString " ) "
         `shouldBe` Right [spanned (1, 1, 2) (2, 1, 3) Tok.RParen]
-  describe "handles whitespace:" $ do
+  describe "handles whitespace:" do
     it "inserts indent" $
       lexString "\n  ident"
         `shouldBe` Right
           [ spanned (1, 2, 1) (3, 2, 3) Tok.Indent,
             spanned (3, 2, 3) (8, 2, 8) (Tok.LowerId "ident")
           ]
-    it "inserts nested dedent" $ do
+    it "inserts nested dedent" do
       let s = "\n  a \n    b\nc"
       {-
       1 |n
@@ -85,14 +86,20 @@ spec_Lexer = do
     it "ignores whitespace" $
       lexString "  \n  "
         `shouldBe` Right [spanned (3, 2, 1) (5, 2, 3) Tok.Indent]
-    it "ignores line comments" $ do
+    it "ignores line comments" do
       lexString " -- comment" `shouldBe` Right []
       lexString "---" `shouldBe` Right []
-    it "ignores block comments" $
+    it "ignores flat block comments" $
       lexString "ok {- \n\n -} cool"
         `shouldBe` Right
           [ spanned (0, 1, 1) (2, 1, 3) (Tok.LowerId "ok"),
             spanned (12, 3, 5) (16, 3, 9) (Tok.LowerId "cool")
+          ]
+    it "ignores nested comments" $
+      lexString "ok {-{- {- {- {- nested -- comment -} -} -} -}-} cool"
+        `shouldBe` Right
+          [ spanned (0, 1, 1) (2, 1, 3) (Tok.LowerId "ok"),
+            spanned (49, 1, 50) (53, 1, 54) (Tok.LowerId "cool")
           ]
 
 -- Test utils:

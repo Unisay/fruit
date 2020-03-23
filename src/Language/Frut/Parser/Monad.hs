@@ -10,12 +10,15 @@ module Language.Frut.Parser.Monad
     PState (..),
 
     -- * Monadic operations
+    askState,
     getPState,
     setPState,
     getStartCode,
     setStartCode,
     getPosition,
     setPosition,
+    getCommentDepth,
+    setCommentDepth,
     getInput,
     setInput,
     popToken,
@@ -52,18 +55,13 @@ newtype P a
 -- | State that the lexer and parser share
 data PState
   = PState
-      { -- | position at current input location
-        curPos :: !Position,
-        -- | the current input
+      { curPos :: !Position,
         curInput :: !InputStream,
-        -- | Alex's start code
         startCode :: !Int,
-        -- | position at previous input location
         prevPos :: Maybe Position,
-        -- | Indentation stack
         pushedIndents :: [Natural],
-        -- | tokens manually pushed by the user
-        pushedTokens :: [Spanned Tok]
+        pushedTokens :: [Spanned Tok],
+        commentDepth :: !Natural
       }
   deriving (Show)
 
@@ -119,8 +117,12 @@ execParser parser input pos =
           startCode = 0,
           prevPos = Nothing,
           pushedIndents = [1],
-          pushedTokens = []
+          pushedTokens = [],
+          commentDepth = 0
         }
+
+askState :: (PState -> a) -> P a
+askState f = f <$> getPState
 
 -- | Extract the state stored in the parser.
 getPState :: P PState
@@ -132,7 +134,7 @@ setPState s = P $ \_ pOk _ -> pOk () s
 
 -- | Get Alex's start code'
 getStartCode :: P Int
-getStartCode = startCode <$> getPState
+getStartCode = askState startCode
 
 -- | Set Alex's start code
 setStartCode :: Int -> P ()
@@ -144,7 +146,7 @@ modifyPState f = P $ \ !s pOk _ -> pOk () (f $! s)
 
 -- | Retrieve the current position of the parser.
 getPosition :: P Position
-getPosition = curPos <$> getPState
+getPosition = askState curPos
 
 -- | Update the current position of the parser.
 setPosition :: Position -> P ()
@@ -152,11 +154,17 @@ setPosition pos = modifyPState $ \s -> s {curPos = pos}
 
 -- | Retrieve the current 'InputStream' of the parser.
 getInput :: P InputStream
-getInput = curInput <$> getPState
+getInput = askState curInput
 
 -- | Update the current 'InputStream' of the parser.
 setInput :: InputStream -> P ()
 setInput i = modifyPState $ \s -> s {curInput = i}
+
+getCommentDepth :: P Natural
+getCommentDepth = askState commentDepth
+
+setCommentDepth :: Natural -> P ()
+setCommentDepth depth = modifyPState (\s -> s {commentDepth = depth})
 
 -- | Manually push a @'Spanned' 'Tok'@.
 pushToken :: Spanned Tok -> P ()

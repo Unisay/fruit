@@ -70,8 +70,8 @@ frut :-
 <0> $nl$white_no_nl* { startWhite }
 <0> $white_no_nl+ ;
 <0> "--".* ;
-<0> @commentStart { setMode comment  }
-<comment> @commentEnd { setMode 0 }
+<0,comment> @commentStart { beginComment  }
+<comment> @commentEnd { endComment }
 <comment> [. \n ] ;
 
 <0> "module" { token Tok.Module }
@@ -146,8 +146,19 @@ lexicalError = peekChar >>= \case
   Just c -> 
     fail ("The character " <> show c <> " does not fit here")
 
-setMode :: Int -> AlexAction
-setMode code _ _ _ = setStartCode code $> Nothing
+beginComment :: AlexAction
+beginComment _ _ _ = do
+  depth <- getCommentDepth
+  setCommentDepth (succ depth)
+  setStartCode comment
+  return Nothing
+
+endComment :: AlexAction
+endComment _ _ _ = do
+  depth <- getCommentDepth
+  setCommentDepth (pred depth)
+  when (depth == 1) (setStartCode 0)
+  return Nothing
 
 }
 
