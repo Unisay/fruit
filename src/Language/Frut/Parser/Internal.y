@@ -15,6 +15,7 @@ import qualified Data.List.NonEmpty as NEL
 }
 
 %name parseModule
+%name parseExpression Expr
 %error { parseError }
 %tokentype { Spanned Tok }
 %lexer { lexToken >>= } { Spanned Tok.EOF _ }
@@ -23,6 +24,7 @@ import qualified Data.List.NonEmpty as NEL
 %token 
   nl       { Spanned Tok.Newline _ }
   '-'      { Spanned Tok.Dash _ }
+  '+'      { Spanned Tok.Plus _ }
   '.'      { Spanned Tok.Dot _ }
   ','      { Spanned Tok.Comma _ }
   '('      { Spanned Tok.LParen _ } 
@@ -34,6 +36,7 @@ import qualified Data.List.NonEmpty as NEL
   exports  { Spanned Tok.Exports _ }
   upperId  { Spanned (Tok.UpperId $$) _ }
   lowerId  { Spanned (Tok.LowerId $$) _ }
+  decimal  { Spanned (Tok.Decimal $$) _ }
   -- let      { Spanned Tok.Let _ }
   -- in       { Spanned Tok.In _ }
   eof      { Spanned Tok.EOF _ }
@@ -52,6 +55,18 @@ Imports :: { [AST.Import] }
 
 Import :: { AST.Import }
   : UpperQName List(lowerId) { AST.Import $1 $2 }
+
+Expr :: { AST.Expr }
+  : Literal { AST.ExprLiteral $1 }
+  | Literal InfixOperator Literal 
+    { AST.ExprInfixOp $2 (AST.ExprLiteral $1) (AST.ExprLiteral $3) }
+
+Literal :: { AST.Literal }
+  : decimal { AST.LiteralDecimal $1 }
+
+InfixOperator :: { AST.InfixOp }
+  : '+' { AST.InfixPlus }
+  | '-' { AST.InfixMinus }
 
 -- | List
 List(e)

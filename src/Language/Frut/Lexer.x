@@ -60,10 +60,10 @@ $idchar    = [$lower $upper $digit $uniidchar \']
 @hex_floating_point = @numspc @hexadecimal \. @hexadecimal @bin_exponent? | @numspc @hexadecimal @bin_exponent
 -- normal signed numerical literals can only be explicitly negative,
 -- not explicitly positive (contrast @exponent)
-@negative = \-
-@signed = @negative ?
-@gap     = \\ $whitechar+ \\
-@string  = $graphic # [\"\\] | " " | @gap
+@minus = \-
+@signed = @minus ?
+@gap    = \\ $whitechar+ \\
+@string = $graphic # [\"\\] | " " | @gap
 
 frut :-
 
@@ -74,18 +74,27 @@ frut :-
 <comment> @commentEnd { endComment }
 <comment> [. \n ] ;
 
+-- Reserved words
 <0> "module" { token Tok.Module }
+<0> "imports" { token Tok.Imports }
+<0> "exports" { token Tok.Exports }
+<0> "let" { token Tok.Let }
+<0> "in" { token Tok.In }
+
+-- Reserved symbols
 <0> "-" { token Tok.Dash }
 <0> "." { token Tok.Dot }
 <0> "," { token Tok.Comma }
 <0> "(" { token Tok.LParen }
 <0> ")" { token Tok.RParen }
-<0> "imports" { token Tok.Imports }
-<0> "exports" { token Tok.Exports }
-<0> "let" { token Tok.Let }
-<0> "in" { token Tok.In }
+<0> "+" { token Tok.Plus }
+<0> "=" { token Tok.Equal }
+
+-- Identifiers
 <0> @lowerId { tokenStr (Tok.LowerId . mkIdent) }
 <0> @upperId { tokenStr (Tok.UpperId . mkIdent) }
+
+-- Literals
 <0> @signed @decimal { tokenDec }
 
 {

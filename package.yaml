@@ -64,20 +64,19 @@ library:
 
 tests:
   spec:
-    main: Driver.hs
+    main: Main.hs
     source-dirs:
       - test
     dependencies:
       - frut
       - filepath
       - pretty-show
+      - hedgehog
       - hspec
       - hspec-expectations-pretty-diff
       - tasty
       - tasty-hspec
       - tasty-golden
-      - tasty-discover
-      - tasty-hedgehog
     ghc-options:
       - -threaded
       - -rtsopts

@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeApplications #-}
 
-module Language.Frut.ParserTest where
+module Language.Frut.Parser.GoldenTests where
 
 import qualified Language.Frut.Data.InputStream as InputStream
 import Language.Frut.Parser (parse)
@@ -10,10 +10,13 @@ import Test.Tasty
 import Test.Tasty.Golden (findByExtension, goldenVsString)
 import Text.Show.Pretty
 
-test_Parser :: IO TestTree
-test_Parser = do
-  frutFiles <- findByExtension [".frut"] "test/golden/parser"
-  pure . testGroup "Parser" $ do
+group :: IO TestTree
+group = parseSourceFile
+
+parseSourceFile :: IO TestTree
+parseSourceFile = do
+  frutFiles <- findByExtension [".frut"] "test/golden/parser/module"
+  pure . testGroup "Parse Source File" $ do
     frutFile <- frutFiles
     return
       $ goldenVsString

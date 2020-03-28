@@ -24,6 +24,8 @@ data Tok
   | Dash
   | Dot
   | Comma
+  | Plus
+  | Equal
   | Space Space
   | EOF
   deriving (Eq, Show)

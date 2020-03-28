@@ -89,3 +89,6 @@ class Parse a where
 
 instance Parse AST.SourceFile where
   parser = parseSourceFile
+
+instance Parse AST.Expr where
+  parser = parseExpression
