@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Language.Frut.Lexer.Util where
 
 import qualified Data.List as List
@@ -7,6 +9,7 @@ import qualified Language.Frut.Data.Span as Span
 import Language.Frut.Parser.Monad
 import qualified Language.Frut.Syntax.Tok as Tok
 import Language.Frut.Syntax.Tok (Tok)
+import Text.Read (read)
 
 type AlexAction = Span -> Int -> String -> P (Maybe (Spanned Tok))
 
@@ -18,6 +21,11 @@ token tok span _ _ =
 tokenStr :: (String -> Tok) -> AlexAction
 tokenStr f span _ str =
   pure . Just $ Spanned (f str) (Just span)
+
+tokenDec :: AlexAction
+tokenDec span _ str = do
+  let integer :: Integer = read str
+  pure . Just $ Spanned (Tok.Decimal integer) (Just span)
 
 startWhite :: AlexAction
 startWhite span@(Span startPos lastPos) n _ = do

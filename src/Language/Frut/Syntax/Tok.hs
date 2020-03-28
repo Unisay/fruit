@@ -18,6 +18,7 @@ data Tok
   | RParen
   | UpperId Ident
   | LowerId Ident
+  | Decimal Integer
   | Let
   | In
   | Dash

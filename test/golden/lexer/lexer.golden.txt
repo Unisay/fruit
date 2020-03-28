@@ -60,4 +60,14 @@ Right
       RParen (Just (Span (Position 126 9 11) (Position 127 9 12)))
   , Spanned
       Dedent (Just (Span (Position 128 10 1) (Position 128 10 1)))
+  , Spanned
+      (Decimal (-42))
+      (Just (Span (Position 128 10 1) (Position 131 10 4)))
+  , Spanned
+      Newline (Just (Span (Position 131 10 4) (Position 132 11 1)))
+  , Spanned
+      (Decimal 800101)
+      (Just (Span (Position 132 11 1) (Position 138 11 7)))
+  , Spanned
+      Newline (Just (Span (Position 138 11 7) (Position 139 12 1)))
   ]

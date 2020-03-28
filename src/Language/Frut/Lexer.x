@@ -86,6 +86,7 @@ frut :-
 <0> "in" { token Tok.In }
 <0> @lowerId { tokenStr (Tok.LowerId . mkIdent) }
 <0> @upperId { tokenStr (Tok.UpperId . mkIdent) }
+<0> @signed @decimal { tokenDec }
 
 {
 
