@@ -88,6 +88,8 @@ frut :-
 <0> "(" { token Tok.LParen }
 <0> ")" { token Tok.RParen }
 <0> "+" { token Tok.Plus }
+<0> "*" { token Tok.Times }
+<0> "/" { token Tok.Div }
 <0> "=" { token Tok.Equal }
 
 -- Identifiers

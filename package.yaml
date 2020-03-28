@@ -59,6 +59,7 @@ library:
     - bytestring
     - deepseq
     - pathtype
+    - pretty
     - text
     - utf8-string
 

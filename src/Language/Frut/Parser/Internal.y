@@ -25,6 +25,8 @@ import qualified Data.List.NonEmpty as NEL
   nl       { Spanned Tok.Newline _ }
   '-'      { Spanned Tok.Dash _ }
   '+'      { Spanned Tok.Plus _ }
+  '*'      { Spanned Tok.Times _ }
+  '/'      { Spanned Tok.Div _ }
   '.'      { Spanned Tok.Dot _ }
   ','      { Spanned Tok.Comma _ }
   '('      { Spanned Tok.LParen _ } 
@@ -40,6 +42,8 @@ import qualified Data.List.NonEmpty as NEL
   -- let      { Spanned Tok.Let _ }
   -- in       { Spanned Tok.In _ }
   eof      { Spanned Tok.EOF _ }
+%left '+' '-'
+%left '*' '/'
 %%
 
 Module :: { AST.Module }
@@ -57,16 +61,24 @@ Import :: { AST.Import }
   : UpperQName List(lowerId) { AST.Import $1 $2 }
 
 Expr :: { AST.Expr }
+  : Expr1 { $1 }
+
+Expr1 :: { AST.Expr }
+  : Expr1 '+' Expr2 { AST.ExprInfixOp AST.InfixPlus $1 $3 }
+  | Expr1 '-' Expr2 { AST.ExprInfixOp AST.InfixMinus $1 $3 }
+  | Expr2 { $1 }
+
+Expr2 :: { AST.Expr }
+  : Expr2 '*' Expr3 { AST.ExprInfixOp AST.InfixTimes $1 $3 }
+  | Expr2 '/' Expr3 { AST.ExprInfixOp AST.InfixDiv $1 $3 }
+  | Expr3 { $1 }
+
+Expr3 :: { AST.Expr }
   : Literal { AST.ExprLiteral $1 }
-  | Literal InfixOperator Literal 
-    { AST.ExprInfixOp $2 (AST.ExprLiteral $1) (AST.ExprLiteral $3) }
+  | '(' Expr ')' { $2 }
 
 Literal :: { AST.Literal }
   : decimal { AST.LiteralDecimal $1 }
-
-InfixOperator :: { AST.InfixOp }
-  : '+' { AST.InfixPlus }
-  | '-' { AST.InfixMinus }
 
 -- | List
 List(e)

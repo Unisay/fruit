@@ -4,8 +4,6 @@
 module Language.Frut.Syntax.AST where
 
 import Language.Frut.Data.Ident (Ident)
-import Text.Show (show)
-import Prelude hiding (show)
 
 -- | This is the fundamental unit of parsing -
 -- it represents the contents of one source file.
@@ -34,14 +32,11 @@ data Expr
 
 newtype Literal
   = LiteralDecimal Integer
-  deriving stock (Eq, Ord)
-  deriving newtype (Show)
+  deriving stock (Eq, Ord, Show)
 
 data InfixOp
   = InfixPlus
   | InfixMinus
-  deriving (Eq, Ord)
-
-instance Show InfixOp where
-  show InfixPlus = "+"
-  show InfixMinus = "-"
+  | InfixTimes
+  | InfixDiv
+  deriving (Eq, Ord, Show)

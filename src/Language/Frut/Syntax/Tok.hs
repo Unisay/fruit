@@ -25,6 +25,8 @@ data Tok
   | Dot
   | Comma
   | Plus
+  | Times
+  | Div
   | Equal
   | Space Space
   | EOF
