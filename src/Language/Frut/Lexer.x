@@ -90,6 +90,7 @@ frut :-
 <0> "+" { token Tok.Plus }
 <0> "*" { token Tok.Times }
 <0> "/" { token Tok.Div }
+<0> "^" { token Tok.Pow }
 <0> "=" { token Tok.Equal }
 
 -- Identifiers

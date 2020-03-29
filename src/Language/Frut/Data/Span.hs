@@ -51,7 +51,7 @@ prettySpan :: Span -> String
 prettySpan (Span lo' hi') = show lo' ++ " - " ++ show hi'
 
 -- | A "tagging" of something with a 'Span' that describes its extent.
-data Spanned a = Spanned a {-# UNPACK #-} !(Maybe Span) -- TODO: avoid Maybe?
+data Spanned a = Spanned a !(Maybe Span) -- TODO: avoid Maybe?
   deriving (Eq, Ord, Show, Data, Typeable, Generic, NFData)
 
 -- | Extract the wrapped value from 'Spanned'

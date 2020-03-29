@@ -27,6 +27,7 @@ import qualified Data.List.NonEmpty as NEL
   '+'      { Spanned Tok.Plus _ }
   '*'      { Spanned Tok.Times _ }
   '/'      { Spanned Tok.Div _ }
+  '^'      { Spanned Tok.Pow _ }
   '.'      { Spanned Tok.Dot _ }
   ','      { Spanned Tok.Comma _ }
   '('      { Spanned Tok.LParen _ } 
@@ -44,6 +45,7 @@ import qualified Data.List.NonEmpty as NEL
   eof      { Spanned Tok.EOF _ }
 %left '+' '-'
 %left '*' '/'
+%right '^'
 %%
 
 Module :: { AST.Module }
@@ -74,6 +76,10 @@ Expr2 :: { AST.Expr }
   | Expr3 { $1 }
 
 Expr3 :: { AST.Expr }
+  : Expr3 '^' Expr4 { AST.ExprInfixOp AST.InfixPow $1 $3 }
+  | Expr4 { $1 }
+
+Expr4 :: { AST.Expr }
   : Literal { AST.ExprLiteral $1 }
   | '(' Expr ')' { $2 }
 

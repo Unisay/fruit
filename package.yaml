@@ -42,15 +42,22 @@ dependencies:
 
 executables:
   frutc:
-    main: Frutc.hs
-    ghc-options: -main-is Frutc
-    source-dirs: exe
+    main: Main.hs
+    source-dirs: exe/frutc
     dependencies:
       - frut
       - optparse-applicative
       - pathtype
       - pretty-show
-
+      - with-utf8
+  fruti:
+    main: Main.hs
+    source-dirs: exe/fruti
+    dependencies:
+      - frut
+      - repline
+      - with-utf8
+      - pretty-show
 library:
   source-dirs:
     - src

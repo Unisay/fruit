@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
@@ -16,9 +17,27 @@ group :: Group
 group = $$(discover)
 
 prop_PrintParseRoundtrip :: Property
-prop_PrintParseRoundtrip = property $ do
+prop_PrintParseRoundtrip = property do
   expr <- forAll genExpr
   tripping expr PP.renderExpr (parse @AST.Expr . InputStream.fromString)
+
+prop_BalancedParens :: Property
+prop_BalancedParens = property do
+  expr <- forAll genExpr
+  let printed = PP.renderExpr expr
+  annotateShow printed
+  isBalanced printed === True
+  where
+    isBalanced :: String -> Bool
+    isBalanced string = go string 0
+      where
+        go :: String -> Integer -> Bool
+        go ('(' : ss) n = go ss (n + 1)
+        go (')' : ss) n | n > 0 = go ss (n -1)
+        go (')' : _) n | n < 1 = False
+        go (_ : ss) n = go ss n
+        go "" 0 = True
+        go "" _ = False
 
 -- Generators:
 
@@ -49,5 +68,6 @@ genInfixOp =
     [ pure AST.InfixPlus,
       pure AST.InfixMinus,
       pure AST.InfixTimes,
-      pure AST.InfixDiv
+      pure AST.InfixDiv,
+      pure AST.InfixPow
     ]

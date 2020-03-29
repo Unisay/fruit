@@ -1,19 +1,19 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Frutc where
+module Main where
 
-import GHC.IO.Encoding (setLocaleEncoding, utf8)
 import qualified Language.Frut.Data.InputStream as InputStream
 import qualified Language.Frut.Parser as Parser
 import qualified Language.Frut.Syntax.AST as AST
+import Main.Utf8 (withUtf8)
 import qualified Options.Applicative as O
 import qualified System.Path as Path
 import Text.Show.Pretty (pPrint)
 
 main :: IO ()
-main = do
-  setLocaleEncoding utf8
+main = withUtf8 do
   Args {argsInput} <- O.execParser argsInfo
   sourceCode <- case argsInput of
     StdInput -> InputStream.readHandle stdin

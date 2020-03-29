@@ -1,5 +1,4 @@
 {-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Language.Frut.Syntax.AST where
 
@@ -39,4 +38,5 @@ data InfixOp
   | InfixMinus
   | InfixTimes
   | InfixDiv
+  | InfixPow
   deriving (Eq, Ord, Show)

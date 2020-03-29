@@ -31,11 +31,11 @@ import Prelude hiding (show)
 data Position
   = Position
       { -- | absolute offset the source file.
-        absoluteOffset :: {-# UNPACK #-} !Natural,
+        absoluteOffset :: !Natural,
         -- | row (line) in the source file.
-        row :: {-# UNPACK #-} !Natural,
+        row :: !Natural,
         -- | column in the source file.
-        col :: {-# UNPACK #-} !Natural
+        col :: !Natural
       }
   deriving (Eq, Data, Typeable, Generic, NFData)
 

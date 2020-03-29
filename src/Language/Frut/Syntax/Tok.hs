@@ -27,6 +27,7 @@ data Tok
   | Plus
   | Times
   | Div
+  | Pow
   | Equal
   | Space Space
   | EOF
