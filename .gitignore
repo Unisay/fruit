@@ -4,3 +4,4 @@ src/Parser/Lexer.hs
 dist-newstyle/
 .stack-work/
 *.cabal
+.history

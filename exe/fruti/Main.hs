@@ -1,9 +1,13 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Main where
 
 import qualified Data.String as String
+import qualified Data.Text.Prettyprint.Doc as Doc
+import Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle, Color (..))
+import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Ansi
 import qualified Language.Frut.Data.InputStream as IS
 import qualified Language.Frut.Parser as Parser
 import qualified Language.Frut.Pretty.Printer as PP
@@ -67,15 +71,27 @@ help _ =
       \:help   (or just :h) - prints this help\n"
 
 parse :: [String] -> Repl ()
-parse = parseExpr >=> putStrLn . ppShow
+parse = parseExpr >=> putStrLn . either ppShow ppShow
 
-parseExpr :: [String] -> Repl AST.Expr
+parseExpr :: [String] -> Repl (Either Parser.ParseFail AST.Expr)
 parseExpr =
-  liftIO
-    . either (die . show) pure
-    . Parser.parse @AST.Expr
-    . IS.fromString
-    . String.unwords
+  pure . Parser.parse @AST.Expr . IS.fromString . String.unwords
 
 format :: [String] -> Repl ()
-format = parseExpr >=> print . PP.renderExpr
+format =
+  parseExpr >=> putTextLn . either renderParseFail renderAnsi
+
+renderParseFail :: Parser.ParseFail -> Text
+renderParseFail = fromString . ppShow
+
+renderAnsi :: AST.Expr -> Text
+renderAnsi =
+  Ansi.renderStrict
+    . Doc.layoutPretty Doc.defaultLayoutOptions
+    . Doc.reAnnotate colorScheme
+    . PP.renderExpr
+
+colorScheme :: PP.Ann -> AnsiStyle
+colorScheme = \case
+  PP.InfixOp -> Ansi.color Cyan
+  PP.Literal -> Ansi.color Red

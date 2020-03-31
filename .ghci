@@ -1,0 +1,4 @@
+:set -XOverloadedStrings
+:set -XTypeApplications
+:set -Wno-missing-local-signatures
+import Relude

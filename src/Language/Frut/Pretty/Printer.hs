@@ -1,23 +1,31 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE LambdaCase #-}
 
 module Language.Frut.Pretty.Printer
   ( renderExpr,
+    Ann (..),
   )
 where
 
+import qualified Data.Text.Prettyprint.Doc as Doc
+import Data.Text.Prettyprint.Doc ((<+>), Doc)
 import Language.Frut.Syntax.AST
 import Language.Frut.Syntax.Precedence
   ( Associativity (..),
     assoc,
     prec,
   )
-import Text.PrettyPrint.Annotated
 import Prelude hiding ((<>))
 
-renderExpr :: Expr -> String
-renderExpr = render . printExpr Nothing
+data Ann
+  = InfixOp
+  | Literal
+  deriving (Eq, Show)
 
-printExpr :: Maybe (Either InfixOp InfixOp) -> Expr -> Doc a
+renderExpr :: Expr -> Doc Ann
+renderExpr = printExpr Nothing
+
+printExpr :: Maybe (Either InfixOp InfixOp) -> Expr -> Doc Ann
 printExpr mbParentOp = \case
   ExprLiteral literal -> printLiteral literal
   ExprInfixOp op e1 e2 ->
@@ -33,30 +41,30 @@ printExpr mbParentOp = \case
               (LeftAssoc, LeftAssoc) ->
                 case parentOp of
                   Left _ -> doc
-                  Right _ -> parens doc
+                  Right _ -> Doc.parens doc
               (RightAssoc, RightAssoc) ->
                 case parentOp of
-                  Left _ -> parens doc
+                  Left _ -> Doc.parens doc
                   Right _ -> doc
-              _ -> parens doc
+              _ -> Doc.parens doc
           LT -> doc
-          GT -> parens doc
+          GT -> Doc.parens doc
       Nothing -> doc
     where
-      doc :: Doc a
+      doc :: Doc Ann
       doc =
         printExpr (Just (Left op)) e1
           <+> printInfixOp op
           <+> printExpr (Just (Right op)) e2
 
-printLiteral :: Literal -> Doc a
-printLiteral = \case
-  LiteralDecimal i -> integer i
+printLiteral :: Literal -> Doc Ann
+printLiteral = Doc.annotate Literal . \case
+  LiteralDecimal i -> Doc.unsafeViaShow i
 
-printInfixOp :: InfixOp -> Doc a
-printInfixOp = \case
-  InfixPlus -> char '+'
-  InfixMinus -> char '-'
-  InfixTimes -> char '*'
-  InfixDiv -> char '/'
-  InfixPow -> char '^'
+printInfixOp :: InfixOp -> Doc Ann
+printInfixOp = Doc.annotate InfixOp . \case
+  InfixPlus -> Doc.pretty '+'
+  InfixMinus -> Doc.pretty '-'
+  InfixTimes -> Doc.pretty '*'
+  InfixDiv -> Doc.slash
+  InfixPow -> Doc.pretty '^'

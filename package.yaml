@@ -58,6 +58,9 @@ executables:
       - repline
       - with-utf8
       - pretty-show
+      - prettyprinter
+      - prettyprinter-ansi-terminal
+
 library:
   source-dirs:
     - src
@@ -66,7 +69,7 @@ library:
     - bytestring
     - deepseq
     - pathtype
-    - pretty
+    - prettyprinter
     - text
     - utf8-string
 
