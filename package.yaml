@@ -70,6 +70,7 @@ library:
     - deepseq
     - pathtype
     - prettyprinter
+    - prettyprinter-ansi-terminal
     - text
     - utf8-string
 

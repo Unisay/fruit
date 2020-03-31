@@ -3,12 +3,14 @@
 
 module Language.Frut.Pretty.Printer
   ( renderExpr,
+    printExpr,
     Ann (..),
   )
 where
 
 import qualified Data.Text.Prettyprint.Doc as Doc
 import Data.Text.Prettyprint.Doc ((<+>), Doc)
+import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Ansi
 import Language.Frut.Syntax.AST
 import Language.Frut.Syntax.Precedence
   ( Associativity (..),
@@ -22,11 +24,18 @@ data Ann
   | Literal
   deriving (Eq, Show)
 
-renderExpr :: Expr -> Doc Ann
-renderExpr = printExpr Nothing
+printExpr :: Expr -> Doc Ann
+printExpr = printExpr' Nothing
 
-printExpr :: Maybe (Either InfixOp InfixOp) -> Expr -> Doc Ann
-printExpr mbParentOp = \case
+renderExpr :: Expr -> Text
+renderExpr =
+  Ansi.renderStrict
+    . Doc.layoutPretty Doc.defaultLayoutOptions
+    . Doc.unAnnotate
+    . printExpr
+
+printExpr' :: Maybe (Either InfixOp InfixOp) -> Expr -> Doc Ann
+printExpr' mbParentOp = \case
   ExprLiteral literal -> printLiteral literal
   ExprInfixOp op e1 e2 ->
     case mbParentOp of
@@ -53,9 +62,9 @@ printExpr mbParentOp = \case
     where
       doc :: Doc Ann
       doc =
-        printExpr (Just (Left op)) e1
+        printExpr' (Just (Left op)) e1
           <+> printInfixOp op
-          <+> printExpr (Just (Right op)) e2
+          <+> printExpr' (Just (Right op)) e2
 
 printLiteral :: Literal -> Doc Ann
 printLiteral = Doc.annotate Literal . \case

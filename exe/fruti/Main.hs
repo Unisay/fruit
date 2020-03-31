@@ -89,7 +89,7 @@ renderAnsi =
   Ansi.renderStrict
     . Doc.layoutPretty Doc.defaultLayoutOptions
     . Doc.reAnnotate colorScheme
-    . PP.renderExpr
+    . PP.printExpr
 
 colorScheme :: PP.Ann -> AnsiStyle
 colorScheme = \case

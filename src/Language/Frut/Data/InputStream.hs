@@ -20,8 +20,8 @@ where
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BE
 import qualified Data.String as Str
-import GHC.Show (show)
 import System.IO hiding (readFile)
+import Text.Show (show)
 import Prelude hiding (fromString, readFile, show, toString)
 
 -- | Read an encoded file into an 'InputStream'

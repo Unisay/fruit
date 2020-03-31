@@ -82,8 +82,5 @@ minus = ExprInfixOp InfixMinus
 times :: Expr -> Expr -> Expr
 times = ExprInfixOp InfixTimes
 
-div :: Expr -> Expr -> Expr
-div = ExprInfixOp InfixDiv
-
 pow :: Expr -> Expr -> Expr
 pow = ExprInfixOp InfixPow

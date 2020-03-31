@@ -19,12 +19,15 @@ group = $$(discover)
 prop_PrintParseRoundtrip :: Property
 prop_PrintParseRoundtrip = property do
   expr <- forAll genExpr
-  tripping expr PP.renderExpr (parse @AST.Expr . InputStream.fromString)
+  tripping
+    expr
+    (toString . PP.renderExpr)
+    (parse @AST.Expr . InputStream.fromString)
 
 prop_BalancedParens :: Property
 prop_BalancedParens = property do
   expr <- forAll genExpr
-  let printed = PP.renderExpr expr
+  let printed = toString (PP.renderExpr expr)
   annotateShow printed
   isBalanced printed === True
   where
