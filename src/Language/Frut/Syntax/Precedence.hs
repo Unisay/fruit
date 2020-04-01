@@ -20,38 +20,38 @@ data Associativity
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 -- | https://en.wikipedia.org/wiki/Operator_associativity
-assoc :: AST.InfixOp -> Associativity
+assoc :: AST.Operator -> Associativity
 assoc = \case
-  AST.InfixPlus -> FullAssoc
-  AST.InfixMinus -> LeftAssoc
-  AST.InfixTimes -> FullAssoc
-  AST.InfixDiv -> LeftAssoc
-  AST.InfixPow -> RightAssoc
+  AST.OperatorPlus -> FullAssoc
+  AST.OperatorMinus -> LeftAssoc
+  AST.OperatorTimes -> FullAssoc
+  AST.OperatorDiv -> LeftAssoc
+  AST.OperatorPow -> RightAssoc
 
-prec :: AST.InfixOp -> Precedence
+prec :: AST.Operator -> Precedence
 prec = \case
-  AST.InfixPlus -> 1
-  AST.InfixMinus -> 1
-  AST.InfixTimes -> 2
-  AST.InfixDiv -> 2
-  AST.InfixPow -> 3
+  AST.OperatorPlus -> 1
+  AST.OperatorMinus -> 1
+  AST.OperatorTimes -> 2
+  AST.OperatorDiv -> 2
+  AST.OperatorPow -> 3
 
 -- |
 -- >>> reassoc :{
---       ExprInfixOp
---         InfixPlus
+--       ExprOperator
+--         OperatorPlus
 --         ExprLiteral (LiteralDecimal 1)
---         ExprInfixOp
---           InfixPlus
+--         ExprOperator
+--           OperatorPlus
 --           (ExprLiteral (LiteralDecimal 2))
 --           (ExprLiteral (LiteralDecimal 3))
 -- :}
--- ExprInfixOp
---   InfixPlus
---   ExprInfixOp
---     InfixPlus
+-- ExprOperator
+--   OperatorPlus
+--   ExprOperator
+--     OperatorPlus
 --     (ExprLiteral (LiteralDecimal 2))
 --     (ExprLiteral (LiteralDecimal 3))
 --   ExprLiteral (LiteralDecimal 1)
-reassoc :: AST.Expr -> AST.Expr
+reassoc :: AST.ExpX ξ -> AST.ExpX ξ
 reassoc = undefined

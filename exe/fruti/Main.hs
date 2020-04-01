@@ -73,9 +73,9 @@ help _ =
 parse :: [String] -> Repl ()
 parse = parseExpr >=> putStrLn . either ppShow ppShow
 
-parseExpr :: [String] -> Repl (Either Parser.ParseFail AST.Expr)
+parseExpr :: [String] -> Repl (Either Parser.ParseFail AST.ExpParsed)
 parseExpr =
-  pure . Parser.parse @AST.Expr . IS.fromString . String.unwords
+  pure . Parser.parse @AST.ExpParsed . IS.fromString . String.unwords
 
 format :: [String] -> Repl ()
 format =
@@ -84,7 +84,7 @@ format =
 renderParseFail :: Parser.ParseFail -> Text
 renderParseFail = fromString . ppShow
 
-renderAnsi :: AST.Expr -> Text
+renderAnsi :: AST.ExpParsed -> Text
 renderAnsi =
   Ansi.renderStrict
     . Doc.layoutPretty Doc.defaultLayoutOptions
@@ -93,5 +93,5 @@ renderAnsi =
 
 colorScheme :: PP.Ann -> AnsiStyle
 colorScheme = \case
-  PP.InfixOp -> Ansi.color Cyan
-  PP.Literal -> Ansi.color Red
+  PP.AnnOperator -> Ansi.color Cyan
+  PP.AnnLiteral -> Ansi.color Red

@@ -105,15 +105,15 @@ frut :-
 -- | Lexer for one 'Token'. The only token this cannot produce is 'Interpolated'.
 lexToken :: P (Spanned Tok)
 lexToken = popToken >>= \case
-  Just spanned@(Spanned _ mbSpan) -> do
-    traverse_ (setPosition . hi) mbSpan
+  Just spanned@(Spanned _ span) -> do
+    setPosition $ hi span
     pure spanned
   Nothing -> do
     pos <- getPosition
     inp <- getInput
     sc <- getStartCode
     case alexScan (pos, inp) sc of
-      AlexEOF -> pure (Spanned Tok.EOF (Just $ Span pos pos))
+      AlexEOF -> pure (Spanned Tok.EOF (Span pos pos))
       AlexError _ -> lexicalError
       AlexSkip (pos', inp') _ -> 
         setPosition pos' *> setInput inp' *> lexToken

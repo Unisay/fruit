@@ -22,7 +22,7 @@ prop_PrintParseRoundtrip = property do
   tripping
     expr
     (toString . PP.renderExpr)
-    (parse @AST.Expr . InputStream.fromString)
+    (parse @AST.ExpParsed . InputStream.fromString)
 
 prop_BalancedParens :: Property
 prop_BalancedParens = property do
@@ -44,33 +44,33 @@ prop_BalancedParens = property do
 
 -- Generators:
 
-genExpr :: Gen AST.Expr
+genExpr :: Gen (AST.ExpX ξ)
 genExpr = Gen.frequency [(10, genExprLiteral), (3, genExprInfixOp)]
 
-genExprInfixOp :: Gen AST.Expr
+genExprInfixOp :: Gen (AST.ExpX ξ)
 genExprInfixOp =
-  AST.ExprInfixOp
+  AST.mkOpX
     <$> genInfixOp
     <*> genExpr
     <*> genExpr
 
 genLiteralDecimal :: Gen AST.Literal
 genLiteralDecimal =
-  AST.LiteralDecimal . fromIntegral
+  AST.Literal . fromIntegral
     <$> Gen.int64 (Range.exponentialFrom 0 (minBound @Int64) (maxBound @Int64))
 
-genExprLiteral :: Gen AST.Expr
-genExprLiteral = AST.ExprLiteral <$> genLiteral
+genExprLiteral :: Gen (AST.ExpX ξ)
+genExprLiteral = AST.mkLitX <$> genLiteral
 
 genLiteral :: Gen AST.Literal
 genLiteral = Gen.choice [genLiteralDecimal]
 
-genInfixOp :: Gen AST.InfixOp
+genInfixOp :: Gen AST.Operator
 genInfixOp =
   Gen.choice
-    [ pure AST.InfixPlus,
-      pure AST.InfixMinus,
-      pure AST.InfixTimes,
-      pure AST.InfixDiv,
-      pure AST.InfixPow
+    [ pure AST.OperatorPlus,
+      pure AST.OperatorMinus,
+      pure AST.OperatorTimes,
+      pure AST.OperatorDiv,
+      pure AST.OperatorPow
     ]

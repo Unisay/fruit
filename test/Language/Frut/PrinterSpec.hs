@@ -64,23 +64,23 @@ printerSpec =
           let e = _8 `minus` (_4 `minus` _2)
            in PP.renderExpr e `shouldBe` "8 - (4 - 2)"
 
-_2 :: Expr
-_2 = ExprLiteral (LiteralDecimal 2)
+_2 :: ExpUD
+_2 = LitUD (Literal 2)
 
-_4 :: Expr
-_4 = ExprLiteral (LiteralDecimal 4)
+_4 :: ExpUD
+_4 = LitUD (Literal 4)
 
-_8 :: Expr
-_8 = ExprLiteral (LiteralDecimal 8)
+_8 :: ExpUD
+_8 = LitUD (Literal 8)
 
-plus :: Expr -> Expr -> Expr
-plus = ExprInfixOp InfixPlus
+plus :: ExpUD -> ExpUD -> ExpUD
+plus = OpUD OperatorPlus
 
-minus :: Expr -> Expr -> Expr
-minus = ExprInfixOp InfixMinus
+minus :: ExpUD -> ExpUD -> ExpUD
+minus = OpUD OperatorMinus
 
-times :: Expr -> Expr -> Expr
-times = ExprInfixOp InfixTimes
+times :: ExpUD -> ExpUD -> ExpUD
+times = OpUD OperatorTimes
 
-pow :: Expr -> Expr -> Expr
-pow = ExprInfixOp InfixPow
+pow :: ExpUD -> ExpUD -> ExpUD
+pow = OpUD OperatorPow

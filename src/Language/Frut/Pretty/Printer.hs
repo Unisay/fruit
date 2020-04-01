@@ -20,24 +20,24 @@ import Language.Frut.Syntax.Precedence
 import Prelude hiding ((<>))
 
 data Ann
-  = InfixOp
-  | Literal
+  = AnnOperator
+  | AnnLiteral
   deriving (Eq, Show)
 
-printExpr :: Expr -> Doc Ann
+printExpr :: ExpX ξ -> Doc Ann
 printExpr = printExpr' Nothing
 
-renderExpr :: Expr -> Text
+renderExpr :: ExpX ξ -> Text
 renderExpr =
   Ansi.renderStrict
     . Doc.layoutPretty Doc.defaultLayoutOptions
     . Doc.unAnnotate
     . printExpr
 
-printExpr' :: Maybe (Either InfixOp InfixOp) -> Expr -> Doc Ann
+printExpr' :: Maybe (Either Operator Operator) -> ExpX ξ -> Doc Ann
 printExpr' mbParentOp = \case
-  ExprLiteral literal -> printLiteral literal
-  ExprInfixOp op e1 e2 ->
+  LitX _ literal -> printLiteral literal
+  OpX _ op e1 e2 ->
     case mbParentOp of
       Just parentOp ->
         case either prec prec parentOp `compare` prec op of
@@ -63,17 +63,18 @@ printExpr' mbParentOp = \case
       doc :: Doc Ann
       doc =
         printExpr' (Just (Left op)) e1
-          <+> printInfixOp op
+          <+> printOperator op
           <+> printExpr' (Just (Right op)) e2
+  ExpX _ -> mempty
 
 printLiteral :: Literal -> Doc Ann
-printLiteral = Doc.annotate Literal . \case
-  LiteralDecimal i -> Doc.unsafeViaShow i
+printLiteral = Doc.annotate AnnLiteral . \case
+  Literal i -> Doc.unsafeViaShow i
 
-printInfixOp :: InfixOp -> Doc Ann
-printInfixOp = Doc.annotate InfixOp . \case
-  InfixPlus -> Doc.pretty '+'
-  InfixMinus -> Doc.pretty '-'
-  InfixTimes -> Doc.pretty '*'
-  InfixDiv -> Doc.slash
-  InfixPow -> Doc.pretty '^'
+printOperator :: Operator -> Doc Ann
+printOperator = Doc.annotate AnnOperator . \case
+  OperatorPlus -> Doc.pretty '+'
+  OperatorMinus -> Doc.pretty '-'
+  OperatorTimes -> Doc.pretty '*'
+  OperatorDiv -> Doc.slash
+  OperatorPow -> Doc.pretty '^'

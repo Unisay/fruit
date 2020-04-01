@@ -16,16 +16,16 @@ type AlexAction = Span -> Int -> String -> P (Maybe (Spanned Tok))
 -- | Make a token.
 token :: Tok -> AlexAction
 token tok span _ _ =
-  pure . Just $ Spanned tok (Just span)
+  pure . Just $ Spanned tok span
 
 tokenStr :: (String -> Tok) -> AlexAction
 tokenStr f span _ str =
-  pure . Just $ Spanned (f str) (Just span)
+  pure . Just $ Spanned (f str) span
 
 tokenDec :: AlexAction
 tokenDec span _ str = do
   let integer :: Integer = read str
-  pure . Just $ Spanned (Tok.Decimal integer) (Just span)
+  pure . Just $ Spanned (Tok.Decimal integer) span
 
 startWhite :: AlexAction
 startWhite span@(Span startPos lastPos) n _ = do
@@ -37,7 +37,7 @@ startWhite span@(Span startPos lastPos) n _ = do
       GT -> do
         setPState parserState {pushedIndents = indent : indents}
         let startPos' = Pos.moveBack (pred indent) lastPos
-        pure . Just $ Spanned Tok.Indent (Just $ Span startPos' lastPos)
+        pure . Just $ Spanned Tok.Indent (Span startPos' lastPos)
       LT ->
         case List.span (> indent) indents of
           (pre, []) ->
@@ -48,7 +48,7 @@ startWhite span@(Span startPos lastPos) n _ = do
             let mkDedent :: Natural -> Spanned Tok
                 mkDedent _ =
                   let pos = lastPos
-                   in Spanned Tok.Dedent $ Just $ Span pos pos
+                   in Spanned Tok.Dedent $ Span pos pos
             case uncons (mkDedent <$> pre) of
               Nothing -> error "Impossible happened: expected dedent"
               Just (dedent, remainingDedents) -> do
@@ -59,5 +59,5 @@ startWhite span@(Span startPos lastPos) n _ = do
                     }
                 pure . Just $ dedent
       EQ ->
-        pure . Just . Spanned Tok.Newline . Just $
+        pure . Just . Spanned Tok.Newline $
           Span.mapHi (const $ Pos.newline startPos) span

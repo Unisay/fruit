@@ -45,12 +45,12 @@ import Language.Frut.Syntax.Tok as Tok
 
 -- | Parse something from an input stream (it is assumed the initial position is 'initPos').
 --
--- >>> fmap void $ parse @(Expr Span) "x + 1"
+-- >>> fmap void $ parse @(ExpParsed Span) "x + 1"
 -- Right (Binary [] AddOp (PathExpr [] Nothing (Path False [PathSegment "x" Nothing ()] ()) ())
 --                        (Lit [] (Int Dec 1 Unsuffixed ()) ())
 --                        ())
 --
--- >>> fmap void $ parse @(Expr Span) "x + "
+-- >>> fmap void $ parse @(ExpParsed Span) "x + "
 -- Left (parse failure at 1:4 (Syntax error: unexpected `<EOF>' (expected an expression)))
 parse :: Parse a => InputStream -> Either ParseFail a
 parse is = execParser parser is Pos.initial
@@ -90,5 +90,5 @@ class Parse a where
 instance Parse AST.SourceFile where
   parser = parseSourceFile
 
-instance Parse AST.Expr where
+instance Parse AST.ExpParsed where
   parser = parseExpression

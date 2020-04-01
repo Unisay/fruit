@@ -96,7 +96,7 @@ spanned ::
   (Natural, Natural, Natural) ->
   a ->
   Spanned a
-spanned from to x = Spanned x (Just span)
+spanned from to x = Spanned x span
   where
     span = Span (pos from) (pos to)
     pos (offset, c, r) = Position offset c r

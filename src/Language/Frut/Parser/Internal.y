@@ -9,9 +9,11 @@ import Language.Frut.Data.Position
 import Language.Frut.Data.Span
 import Language.Frut.Data.Ident
 import Language.Frut.Parser.Monad
+import Language.Frut.Parser.Reversed
 import Language.Frut.Syntax.Tok
 import Relude.Unsafe ((!!))
 import qualified Data.List.NonEmpty as NEL
+import Data.List.NonEmpty (NonEmpty(..), (<|))
 }
 
 %name parseModule
@@ -37,9 +39,9 @@ import qualified Data.List.NonEmpty as NEL
   module   { Spanned Tok.Module _ }
   imports  { Spanned Tok.Imports _ }
   exports  { Spanned Tok.Exports _ }
-  upperId  { Spanned (Tok.UpperId $$) _ }
+  upperId  { Spanned (Tok.UpperId _) _ }
   lowerId  { Spanned (Tok.LowerId $$) _ }
-  decimal  { Spanned (Tok.Decimal $$) _ }
+  decimal  { Spanned (Tok.Decimal _) _ }
   -- let      { Spanned Tok.Let _ }
   -- in       { Spanned Tok.In _ }
   eof      { Spanned Tok.EOF _ }
@@ -62,29 +64,36 @@ Imports :: { [AST.Import] }
 Import :: { AST.Import }
   : UpperQName List(lowerId) { AST.Import $1 $2 }
 
-Expr :: { AST.Expr }
+Expr :: { AST.ExpParsed }
   : Expr1 { $1 }
 
-Expr1 :: { AST.Expr }
-  : Expr1 '+' Expr2 { AST.ExprInfixOp AST.InfixPlus $1 $3 }
-  | Expr1 '-' Expr2 { AST.ExprInfixOp AST.InfixMinus $1 $3 }
+Expr1 :: { AST.ExpParsed }
+  : Expr1 '+' Expr2 
+    { AST.OpParsed (spanOf $2) AST.OperatorPlus $1 $3 }
+  | Expr1 '-' Expr2 
+    { AST.OpParsed (spanOf $2) AST.OperatorMinus $1 $3 }
   | Expr2 { $1 }
 
-Expr2 :: { AST.Expr }
-  : Expr2 '*' Expr3 { AST.ExprInfixOp AST.InfixTimes $1 $3 }
-  | Expr2 '/' Expr3 { AST.ExprInfixOp AST.InfixDiv $1 $3 }
+Expr2 :: { AST.ExpParsed }
+  : Expr2 '*' Expr3 
+    { AST.OpParsed (spanOf $2) AST.OperatorTimes $1 $3 }
+  | Expr2 '/' Expr3 
+    { AST.OpParsed (spanOf $2) AST.OperatorDiv $1 $3 }
   | Expr3 { $1 }
 
-Expr3 :: { AST.Expr }
-  : Expr3 '^' Expr4 { AST.ExprInfixOp AST.InfixPow $1 $3 }
+Expr3 :: { AST.ExpParsed }
+  : Expr3 '^' Expr4 
+    { AST.OpParsed (spanOf $2) AST.OperatorPow $1 $3 }
   | Expr4 { $1 }
 
-Expr4 :: { AST.Expr }
-  : Literal { AST.ExprLiteral $1 }
+Expr4 :: { AST.ExpParsed }
+  : Literal { $1 }
   | '(' Expr ')' { $2 }
 
-Literal :: { AST.Literal }
-  : decimal { AST.LiteralDecimal $1 }
+Literal :: { AST.ExpParsed }
+  : decimal 
+    { AST.LitParsed (spanOf $1) 
+      (let Tok.Decimal d = unspan $1 in AST.Literal d) }
 
 -- | List
 List(e)
@@ -112,9 +121,47 @@ Nls : nl {} | nl Nls {}
 -- | Empty Space
 ES : {- empty -} {} | eof {} | nl ES {}
 
-UpperQName
-  : upperId { pure $1 }
-  | upperId '.' UpperQName { NEL.cons $1 $3 }
+UpperQName :: { AST.QualifiedName }
+  : upperId 
+    { let Tok.UpperId ident = unspan $1 in pure ident }
+  | upperId '.' UpperQName 
+    { let Tok.UpperId ident = unspan $1 in NEL.cons ident $3 }
+
+-------------
+-- Utility --
+-------------
+
+-- | One or more occurences of 'p'
+some(p) :: { Reversed NonEmpty p }
+  : some(p) p             { let Reversed xs = $1 in Reversed ($2 <| xs) }
+  | p                     { [$1] }
+
+-- | Zero or more occurences of 'p'
+many(p) :: { [ p ] }
+  : some(p)               { toList $1 }
+  | {- empty -}           { [] }
+
+-- | One or more occurences of 'p', seperated by 'sep'
+sep_by1(p,sep) :: { Reversed NonEmpty p }
+  : sep_by1(p,sep) sep p  { let Reversed xs = $1 in Reversed ($3 <| xs) }
+  | p                     { [$1] }
+
+-- | Zero or more occurrences of 'p', separated by 'sep'
+sep_by(p,sep) :: { [ p ] }
+  : sep_by1(p,sep)        { toList $1 }
+  | {- empty -}           { [] }
+
+-- | One or more occurrences of 'p', seperated by 'sep', 
+-- optionally ending in 'sep'
+sep_by1T(p,sep) :: { Reversed NonEmpty p }
+  : sep_by1(p,sep) sep    { $1 }
+  | sep_by1(p,sep)        { $1 }
+
+-- | Zero or more occurences of 'p', seperated by 'sep', 
+-- optionally ending in 'sep' (only if there is at least one 'p')
+sep_byT(p,sep) :: { [ p ] }
+  : sep_by1T(p,sep)       { toList $1 }
+  | {- empty -}           { [] }
 
 {
 

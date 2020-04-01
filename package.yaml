@@ -68,11 +68,13 @@ library:
     - array
     - bytestring
     - deepseq
+    - ghc-prim
     - pathtype
     - prettyprinter
     - prettyprinter-ansi-terminal
     - text
     - utf8-string
+    - uniplate
 
 tests:
   spec:
