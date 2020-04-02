@@ -42,7 +42,7 @@ mkLitX :: Literal -> ExpX ξ
 mkLitX = LitX (error "Attempt to evaluate void (LitX)")
 
 mkOpX :: Operator -> ExpX ξ -> ExpX ξ -> ExpX ξ
-mkOpX = OpX (error "Attempt to evaluate void (OpX")
+mkOpX = OpX (error "Attempt to evaluate void (OpX)")
 
 newtype Literal
   = Literal Integer

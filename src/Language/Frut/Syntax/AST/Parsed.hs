@@ -1,4 +1,6 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Language.Frut.Syntax.AST.Parsed where
@@ -16,9 +18,9 @@ type instance XExp Parsed = Void
 
 type ExpParsed = ExpX Parsed
 
-instance Eq (ExpX ξ)
+deriving instance Eq ExpParsed
 
-instance Show (ExpX ξ)
+deriving instance Show ExpParsed
 
 pattern LitParsed :: Span -> Literal -> ExpParsed
 pattern LitParsed span i <-

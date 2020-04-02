@@ -1,73 +1,52 @@
 Right
-  [ Spanned Module (Just (Span (Position 0 1 1) (Position 6 1 7)))
+  [ Spanned Module (Span (Position 0 1 1) (Position 6 1 7))
   , Spanned
-      (UpperId "Hello") (Just (Span (Position 26 3 4) (Position 31 3 9)))
+      (UpperId "Hello") (Span (Position 26 3 4) (Position 31 3 9))
   , Spanned
-      (LowerId "hello")
-      (Just (Span (Position 32 3 10) (Position 37 3 15)))
+      (LowerId "hello") (Span (Position 32 3 10) (Position 37 3 15))
   , Spanned
-      (UpperId "Hello")
-      (Just (Span (Position 38 3 16) (Position 43 3 21)))
-  , Spanned Dot (Just (Span (Position 43 3 21) (Position 44 3 22)))
+      (UpperId "Hello") (Span (Position 38 3 16) (Position 43 3 21))
+  , Spanned Dot (Span (Position 43 3 21) (Position 44 3 22))
   , Spanned
-      (UpperId "Wonderful")
-      (Just (Span (Position 44 3 22) (Position 53 3 31)))
-  , Spanned Dot (Just (Span (Position 53 3 31) (Position 54 3 32)))
+      (UpperId "Wonderful") (Span (Position 44 3 22) (Position 53 3 31))
+  , Spanned Dot (Span (Position 53 3 31) (Position 54 3 32))
   , Spanned
-      (UpperId "World")
-      (Just (Span (Position 54 3 32) (Position 59 3 37)))
+      (UpperId "World") (Span (Position 54 3 32) (Position 59 3 37))
   , Spanned
-      (UpperId "HELLO")
-      (Just (Span (Position 60 3 38) (Position 65 3 43)))
-  , Spanned Dot (Just (Span (Position 65 3 43) (Position 66 3 44)))
+      (UpperId "HELLO") (Span (Position 60 3 38) (Position 65 3 43))
+  , Spanned Dot (Span (Position 65 3 43) (Position 66 3 44))
   , Spanned
-      (UpperId "WORLD")
-      (Just (Span (Position 66 3 44) (Position 71 3 49)))
+      (UpperId "WORLD") (Span (Position 66 3 44) (Position 71 3 49))
+  , Spanned Newline (Span (Position 71 3 49) (Position 72 4 1))
+  , Spanned Let (Span (Position 72 4 1) (Position 75 4 4))
+  , Spanned Indent (Span (Position 77 5 1) (Position 79 5 3))
   , Spanned
-      Newline (Just (Span (Position 71 3 49) (Position 72 4 1)))
-  , Spanned Let (Just (Span (Position 72 4 1) (Position 75 4 4)))
-  , Spanned Indent (Just (Span (Position 77 5 1) (Position 79 5 3)))
+      (LowerId "blah") (Span (Position 79 5 3) (Position 83 5 7))
   , Spanned
-      (LowerId "blah") (Just (Span (Position 79 5 3) (Position 83 5 7)))
+      (LowerId "blah") (Span (Position 84 5 8) (Position 88 5 12))
+  , Spanned Dedent (Span (Position 89 6 1) (Position 89 6 1))
+  , Spanned In (Span (Position 89 6 1) (Position 91 6 3))
+  , Spanned Indent (Span (Position 93 7 1) (Position 95 7 3))
+  , Spanned (UpperId "IN") (Span (Position 95 7 3) (Position 97 7 5))
   , Spanned
-      (LowerId "blah") (Just (Span (Position 84 5 8) (Position 88 5 12)))
-  , Spanned Dedent (Just (Span (Position 89 6 1) (Position 89 6 1)))
-  , Spanned In (Just (Span (Position 89 6 1) (Position 91 6 3)))
-  , Spanned Indent (Just (Span (Position 93 7 1) (Position 95 7 3)))
+      (UpperId "Let") (Span (Position 98 7 6) (Position 101 7 9))
   , Spanned
-      (UpperId "IN") (Just (Span (Position 95 7 3) (Position 97 7 5)))
+      (UpperId "In") (Span (Position 102 7 10) (Position 104 7 12))
   , Spanned
-      (UpperId "Let") (Just (Span (Position 98 7 6) (Position 101 7 9)))
+      (UpperId "LET") (Span (Position 105 7 13) (Position 108 7 16))
+  , Spanned Dedent (Span (Position 109 8 1) (Position 109 8 1))
   , Spanned
-      (UpperId "In")
-      (Just (Span (Position 102 7 10) (Position 104 7 12)))
+      (LowerId "import") (Span (Position 109 8 1) (Position 115 8 7))
+  , Spanned Indent (Span (Position 116 9 1) (Position 118 9 3))
   , Spanned
-      (UpperId "LET")
-      (Just (Span (Position 105 7 13) (Position 108 7 16)))
+      (LowerId "export") (Span (Position 118 9 3) (Position 124 9 9))
+  , Spanned LParen (Span (Position 125 9 10) (Position 126 9 11))
+  , Spanned RParen (Span (Position 126 9 11) (Position 127 9 12))
+  , Spanned Dedent (Span (Position 128 10 1) (Position 128 10 1))
   , Spanned
-      Dedent (Just (Span (Position 109 8 1) (Position 109 8 1)))
+      (Decimal (-42)) (Span (Position 128 10 1) (Position 131 10 4))
+  , Spanned Newline (Span (Position 131 10 4) (Position 132 11 1))
   , Spanned
-      (LowerId "import")
-      (Just (Span (Position 109 8 1) (Position 115 8 7)))
-  , Spanned
-      Indent (Just (Span (Position 116 9 1) (Position 118 9 3)))
-  , Spanned
-      (LowerId "export")
-      (Just (Span (Position 118 9 3) (Position 124 9 9)))
-  , Spanned
-      LParen (Just (Span (Position 125 9 10) (Position 126 9 11)))
-  , Spanned
-      RParen (Just (Span (Position 126 9 11) (Position 127 9 12)))
-  , Spanned
-      Dedent (Just (Span (Position 128 10 1) (Position 128 10 1)))
-  , Spanned
-      (Decimal (-42))
-      (Just (Span (Position 128 10 1) (Position 131 10 4)))
-  , Spanned
-      Newline (Just (Span (Position 131 10 4) (Position 132 11 1)))
-  , Spanned
-      (Decimal 800101)
-      (Just (Span (Position 132 11 1) (Position 138 11 7)))
-  , Spanned
-      Newline (Just (Span (Position 138 11 7) (Position 139 12 1)))
+      (Decimal 800101) (Span (Position 132 11 1) (Position 138 11 7))
+  , Spanned Newline (Span (Position 138 11 7) (Position 139 12 1))
   ]

@@ -5,9 +5,8 @@
 
 module Language.Frut.Parser.PropertyTests where
 
+import qualified Generators.Language.Frut.AST.Vanilla as Gen
 import Hedgehog
-import qualified Hedgehog.Gen as Gen
-import qualified Hedgehog.Range as Range
 import qualified Language.Frut.Data.InputStream as InputStream
 import Language.Frut.Parser (parse)
 import qualified Language.Frut.Pretty.Printer as PP
@@ -18,15 +17,15 @@ group = $$(discover)
 
 prop_PrintParseRoundtrip :: Property
 prop_PrintParseRoundtrip = property do
-  expr <- forAll genExpr
+  expr <- forAll Gen.exp
   tripping
     expr
     (toString . PP.renderExpr)
-    (parse @AST.ExpParsed . InputStream.fromString)
+    (fmap AST.toVanilla . parse @AST.ExpParsed . InputStream.fromString)
 
 prop_BalancedParens :: Property
 prop_BalancedParens = property do
-  expr <- forAll genExpr
+  expr <- forAll Gen.exp
   let printed = toString (PP.renderExpr expr)
   annotateShow printed
   isBalanced printed === True
@@ -41,36 +40,3 @@ prop_BalancedParens = property do
         go (_ : ss) n = go ss n
         go "" 0 = True
         go "" _ = False
-
--- Generators:
-
-genExpr :: Gen (AST.ExpX ξ)
-genExpr = Gen.frequency [(10, genExprLiteral), (3, genExprInfixOp)]
-
-genExprInfixOp :: Gen (AST.ExpX ξ)
-genExprInfixOp =
-  AST.mkOpX
-    <$> genInfixOp
-    <*> genExpr
-    <*> genExpr
-
-genLiteralDecimal :: Gen AST.Literal
-genLiteralDecimal =
-  AST.Literal . fromIntegral
-    <$> Gen.int64 (Range.exponentialFrom 0 (minBound @Int64) (maxBound @Int64))
-
-genExprLiteral :: Gen (AST.ExpX ξ)
-genExprLiteral = AST.mkLitX <$> genLiteral
-
-genLiteral :: Gen AST.Literal
-genLiteral = Gen.choice [genLiteralDecimal]
-
-genInfixOp :: Gen AST.Operator
-genInfixOp =
-  Gen.choice
-    [ pure AST.OperatorPlus,
-      pure AST.OperatorMinus,
-      pure AST.OperatorTimes,
-      pure AST.OperatorDiv,
-      pure AST.OperatorPow
-    ]
