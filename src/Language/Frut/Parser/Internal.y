@@ -65,30 +65,20 @@ Import :: { AST.Import }
   : UpperQName List(lowerId) { AST.Import $1 $2 }
 
 Expr :: { AST.ExpParsed }
-  : Expr1 { $1 }
-
-Expr1 :: { AST.ExpParsed }
-  : Expr1 '+' Expr2 
+  : Expr '+' Expr 
     { AST.OpParsed (spanOf $2) AST.OperatorPlus $1 $3 }
-  | Expr1 '-' Expr2 
+  | Expr '-' Expr 
     { AST.OpParsed (spanOf $2) AST.OperatorMinus $1 $3 }
-  | Expr2 { $1 }
-
-Expr2 :: { AST.ExpParsed }
-  : Expr2 '*' Expr3 
+  | Expr '*' Expr
     { AST.OpParsed (spanOf $2) AST.OperatorTimes $1 $3 }
-  | Expr2 '/' Expr3 
+  | Expr '/' Expr
     { AST.OpParsed (spanOf $2) AST.OperatorDiv $1 $3 }
-  | Expr3 { $1 }
-
-Expr3 :: { AST.ExpParsed }
-  : Expr3 '^' Expr4 
+  | Expr '^' Expr
     { AST.OpParsed (spanOf $2) AST.OperatorPow $1 $3 }
-  | Expr4 { $1 }
-
-Expr4 :: { AST.ExpParsed }
-  : Literal { $1 }
-  | '(' Expr ')' { $2 }
+  | Literal 
+    { $1 }
+  | '(' Expr ')' 
+    { $2 }
 
 Literal :: { AST.ExpParsed }
   : decimal 

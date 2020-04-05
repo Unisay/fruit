@@ -5,6 +5,11 @@ module Language.Frut.Syntax.Precedence
     prec,
     Associativity (..),
     assoc,
+    isFullyAssociative,
+    isLeftAssociative,
+    isRightAssociative,
+    associatesLeft,
+    associatesRight,
   )
 where
 
@@ -28,6 +33,21 @@ assoc = \case
   AST.OperatorDiv -> LeftAssoc
   AST.OperatorPow -> RightAssoc
 
+isFullyAssociative :: AST.Operator -> Bool
+isFullyAssociative = (== FullAssoc) . assoc
+
+isLeftAssociative :: AST.Operator -> Bool
+isLeftAssociative = (== LeftAssoc) . assoc
+
+isRightAssociative :: AST.Operator -> Bool
+isRightAssociative = (== RightAssoc) . assoc
+
+associatesLeft :: AST.Operator -> Bool
+associatesLeft = liftA2 (||) isLeftAssociative isFullyAssociative
+
+associatesRight :: AST.Operator -> Bool
+associatesRight = liftA2 (||) isRightAssociative isFullyAssociative
+
 prec :: AST.Operator -> Precedence
 prec = \case
   AST.OperatorPlus -> 1
@@ -35,23 +55,3 @@ prec = \case
   AST.OperatorTimes -> 2
   AST.OperatorDiv -> 2
   AST.OperatorPow -> 3
-
--- |
--- >>> reassoc :{
---       ExprOperator
---         OperatorPlus
---         ExprLiteral (LiteralDecimal 1)
---         ExprOperator
---           OperatorPlus
---           (ExprLiteral (LiteralDecimal 2))
---           (ExprLiteral (LiteralDecimal 3))
--- :}
--- ExprOperator
---   OperatorPlus
---   ExprOperator
---     OperatorPlus
---     (ExprLiteral (LiteralDecimal 2))
---     (ExprLiteral (LiteralDecimal 3))
---   ExprLiteral (LiteralDecimal 1)
-reassoc :: AST.ExpX ξ -> AST.ExpX ξ
-reassoc = undefined

@@ -1,8 +1,8 @@
 module Generators
-  ( module GB,
-    module GG,
+  ( module Generators.Basic,
+    module Generators.Language.Frut.AST.Generic,
   )
 where
 
-import qualified Generators.Basic as GB
-import qualified Generators.Language.Frut.AST.Generic as GG
+import Generators.Basic
+import Generators.Language.Frut.AST.Generic

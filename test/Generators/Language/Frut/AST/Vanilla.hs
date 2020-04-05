@@ -7,7 +7,7 @@ import qualified Language.Frut.Syntax.AST as AST
 import Prelude hiding (exp)
 
 exp :: Gen AST.ExpVanilla
-exp = Gen.frequency [(10, lit), (3, op)]
+exp = Gen.frequency [(2, lit), (1, op)]
 
 lit :: Gen AST.ExpVanilla
 lit = AST.LitVanilla <$> GG.literal

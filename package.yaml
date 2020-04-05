@@ -91,6 +91,8 @@ tests:
       - tasty
       - tasty-hspec
       - tasty-golden
+      - with-utf8
+      - uniplate
     ghc-options:
       - -threaded
       - -rtsopts

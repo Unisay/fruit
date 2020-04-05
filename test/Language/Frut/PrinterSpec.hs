@@ -13,7 +13,7 @@ import Prelude hiding (div)
 
 printerSpec :: Spec
 printerSpec =
-  describe "--- Printer renders expressions properly ---" do
+  describe "━━━ Printer renders expressions properly ━━━" do
     describe "different precedence" do
       it "2 + (4 * 8)  ->  2 + 4 * 8" $
         let e = _2 `plus` (_4 `times` _8)

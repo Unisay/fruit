@@ -1,16 +1,19 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Language.Frut.Parser.PropertyTests where
 
+import Data.Generics.Uniplate (rewrite)
 import qualified Generators.Language.Frut.AST.Vanilla as Gen
 import Hedgehog
 import qualified Language.Frut.Data.InputStream as InputStream
 import Language.Frut.Parser (parse)
 import qualified Language.Frut.Pretty.Printer as PP
 import qualified Language.Frut.Syntax.AST as AST
+import Language.Frut.Syntax.Precedence (associatesLeft, isRightAssociative, prec)
 
 group :: Group
 group = $$(discover)
@@ -18,8 +21,10 @@ group = $$(discover)
 prop_PrintParseRoundtrip :: Property
 prop_PrintParseRoundtrip = property do
   expr <- forAll Gen.exp
+  let expr' = reassoc expr
+  annotateShow expr'
   tripping
-    expr
+    expr'
     (toString . PP.renderExpr)
     (fmap AST.toVanilla . parse @AST.ExpParsed . InputStream.fromString)
 
@@ -40,3 +45,15 @@ prop_BalancedParens = property do
         go (_ : ss) n = go ss n
         go "" 0 = True
         go "" _ = False
+
+reassoc :: AST.ExpVanilla -> AST.ExpVanilla
+reassoc = rewrite \case
+  -- ∀ left-assoc ops: e1 `op` (e2 `op` e3) ---> (e1 `op` e2) `op` e3
+  AST.OpVanilla op1 e1 (AST.OpVanilla op2 e2 e3)
+    | prec op1 == prec op2 && associatesLeft op1 && associatesLeft op2 ->
+      Just $ AST.OpVanilla op1 (AST.OpVanilla op2 e1 e2) e3
+  -- ∀ right-assoc ops: (e1 `op` e2) `op` e3 ---> e1 `op` (e2 `op` e3)
+  AST.OpVanilla op1 (AST.OpVanilla op2 e1 e2) e3
+    | prec op1 == prec op2 && isRightAssociative op1 && isRightAssociative op2 ->
+      Just $ AST.OpVanilla op1 e1 (AST.OpVanilla op2 e2 e3)
+  _ -> Nothing
