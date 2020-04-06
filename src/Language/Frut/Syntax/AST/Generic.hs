@@ -30,13 +30,20 @@ data Import
 data ExpX ξ
   = LitX (XLit ξ) Literal
   | OpX (XOp ξ) Operator (ExpX ξ) (ExpX ξ)
-  | ExpX (XExp ξ)
+  | ScopeX (XScope ξ) (ExpX ξ)
+  | ExpX !(XExp ξ)
 
 type family XLit ξ
 
 type family XOp ξ
 
+type family XScope ξ
+
 type family XExp ξ
+
+failMatch :: Text -> a
+failMatch s =
+  error $ "Uniplate call with unexpected number of list elements for " <> s
 
 mkLitX :: Literal -> ExpX ξ
 mkLitX = LitX (error "Attempt to evaluate void (LitX)")

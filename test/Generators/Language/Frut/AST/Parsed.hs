@@ -13,13 +13,22 @@ import qualified Language.Frut.Syntax.AST as AST
 import Prelude hiding (exp)
 
 exp :: Gen AST.ExpParsed
-exp = Gen.frequency [(10, expLiteral), (3, op)]
+exp =
+  Gen.frequency
+    [ (2, expLiteral),
+      (1, op)
+    ]
 
 expLiteral :: Gen AST.ExpParsed
 expLiteral = AST.LitParsed <$> span <*> GG.literal
 
 op :: Gen AST.ExpParsed
-op = AST.OpParsed <$> span <*> GG.op <*> exp <*> exp
+op = f <$> span <*> GG.op <*> exp <*> exp
+  where
+    f sp o e1 e2 = AST.ScopeParsed sp (AST.OpParsed sp o e1 e2)
+
+scope :: Gen AST.ExpParsed
+scope = AST.ScopeParsed <$> span <*> exp
 
 span :: Gen Span
 span = do

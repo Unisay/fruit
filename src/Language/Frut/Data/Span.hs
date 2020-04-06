@@ -48,7 +48,7 @@ subsetOf (Span l1 h1) (Span l2 h2) =
 prettySpan :: Span -> String
 prettySpan (Span lo' hi') = show lo' ++ " - " ++ show hi'
 
--- | Convenience function lifting 'Mon.<>' to work on all 'Located' things
+-- | Convenience function lifting '<>' to work on all 'Located' things
 {-# INLINE (#) #-}
 (#) :: (Located a, Located b) => a -> b -> Span
 left # right = spanOf left <> spanOf right

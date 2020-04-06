@@ -16,6 +16,8 @@ type instance XLit Vanilla = ()
 
 type instance XOp Vanilla = ()
 
+type instance XScope Vanilla = ()
+
 type instance XExp Vanilla = ()
 
 type ExpVanilla = ExpX Vanilla
@@ -25,18 +27,14 @@ deriving instance Eq ExpVanilla
 deriving instance Show ExpVanilla
 
 instance Uniplate ExpVanilla where
-  uniplate (OpX _ op a b) =
-    ( [a, b],
-      \case
-        [a', b'] -> OpX () op a' b'
-        _ ->
-          error
-            "Uniplate call with unexpected number of list elements \
-            \for ExpVanilla (OpX)"
-    )
-  -- Case per leaf node in order not to disable exhaustveness checker
-  uniplate x@(ExpX _) = (mempty, const x)
-  uniplate x@(LitX _ _) = (mempty, const x)
+  uniplate = \case
+    ScopeX _ e ->
+      ([e], \case [a'] -> ScopeVanilla a'; _ -> failMatch "ScopeVanilla")
+    OpX _ op a b ->
+      ([a, b], \case [a', b'] -> OpVanilla op a' b'; _ -> failMatch "OpVanilla")
+    -- Case per leaf node in order not to disable exhaustveness checker
+    x@ExpX {} -> (mempty, const x)
+    x@LitX {} -> (mempty, const x)
 
 pattern LitVanilla :: Literal -> ExpVanilla
 pattern LitVanilla i <-
@@ -49,6 +47,12 @@ pattern OpVanilla op e1 e2 <-
   OpX _ op e1 e2
   where
     OpVanilla op e1 e2 = OpX () op e1 e2
+
+pattern ScopeVanilla :: ExpVanilla -> ExpVanilla
+pattern ScopeVanilla e <-
+  ScopeX _ e
+  where
+    ScopeVanilla e = ScopeX () e
 
 toVanilla :: ExpX ξ -> ExpVanilla
 toVanilla = unsafeCoerce -- TODO: proper conversion

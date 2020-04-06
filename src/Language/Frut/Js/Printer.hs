@@ -1,35 +1,27 @@
 {-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Language.Frut.Pretty.Printer
-  ( renderExpr,
-    printExpr,
-    Ann (..),
-  )
-where
+module Language.Frut.Js.Printer where
 
 import Data.Generics.Uniplate (para)
 import qualified Data.Text.Prettyprint.Doc as Doc
 import Data.Text.Prettyprint.Doc (Doc)
-import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Ansi
+import qualified Data.Text.Prettyprint.Doc.Render.Text as Doc
 import Language.Frut.Syntax.AST
-import Prelude hiding ((<>))
 
-data Ann
-  = AnnOperator
-  | AnnLiteral
+data Js
+  = JsOperator
+  | JsLiteral
   deriving (Eq, Show)
 
-renderExpr :: ExpX ξ -> Text
+renderExpr :: ExpParsed -> Text
 renderExpr =
-  Ansi.renderStrict
+  Doc.renderStrict
     . Doc.layoutPretty Doc.defaultLayoutOptions
-    . Doc.unAnnotate
     . printExpr
 
-printExpr :: ExpX ξ -> Doc Ann
-printExpr = toVanilla >>> para \case
+printExpr :: ExpParsed -> Doc Js
+printExpr = para \case
   ScopeX _ _ ->
     Doc.parens . Doc.hsep
   LitX _ literal ->
@@ -37,15 +29,13 @@ printExpr = toVanilla >>> para \case
   OpX _ op _ _ ->
     Doc.concatWith
       (Doc.surround (Doc.surround (printOperator op) Doc.space Doc.space))
-  ExpX _ ->
-    Doc.hcat
 
-printLiteral :: Literal -> Doc Ann
-printLiteral = Doc.annotate AnnLiteral . \case
+printLiteral :: Literal -> Doc Js
+printLiteral = Doc.annotate JsLiteral . \case
   Literal i -> Doc.unsafeViaShow i
 
-printOperator :: Operator -> Doc Ann
-printOperator = Doc.annotate AnnOperator . \case
+printOperator :: Operator -> Doc Js
+printOperator = Doc.annotate JsOperator . \case
   OperatorPlus -> Doc.pretty '+'
   OperatorMinus -> Doc.pretty '-'
   OperatorTimes -> Doc.pretty '*'

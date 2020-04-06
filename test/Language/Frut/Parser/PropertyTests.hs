@@ -7,11 +7,12 @@
 module Language.Frut.Parser.PropertyTests where
 
 import Data.Generics.Uniplate (rewrite)
-import qualified Generators.Language.Frut.AST.Vanilla as Gen
+import qualified Generators.Language.Frut.AST.Parsed as Gen
 import Hedgehog
 import qualified Language.Frut.Data.InputStream as InputStream
-import Language.Frut.Parser (parse)
-import qualified Language.Frut.Pretty.Printer as PP
+import qualified Language.Frut.Optimizer as Opt
+import qualified Language.Frut.Parser as Parser
+import qualified Language.Frut.Pretty.Printer as Printer
 import qualified Language.Frut.Syntax.AST as AST
 import Language.Frut.Syntax.Precedence (associatesLeft, isRightAssociative, prec)
 
@@ -21,17 +22,20 @@ group = $$(discover)
 prop_PrintParseRoundtrip :: Property
 prop_PrintParseRoundtrip = property do
   expr <- forAll Gen.exp
-  let expr' = reassoc expr
+  let expr' = reassoc . AST.toVanilla . Opt.removeRedundantParens $ expr
   annotateShow expr'
   tripping
     expr'
-    (toString . PP.renderExpr)
-    (fmap AST.toVanilla . parse @AST.ExpParsed . InputStream.fromString)
+    (toString . Printer.renderExpr)
+    ( fmap AST.toVanilla
+        . Parser.parse @AST.ExpParsed
+        . InputStream.fromString
+    )
 
 prop_BalancedParens :: Property
 prop_BalancedParens = property do
   expr <- forAll Gen.exp
-  let printed = toString (PP.renderExpr expr)
+  let printed = toString (Printer.renderExpr expr)
   annotateShow printed
   isBalanced printed === True
   where

@@ -9,6 +9,8 @@ import qualified Data.Text.Prettyprint.Doc as Doc
 import Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle, Color (..))
 import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Ansi
 import qualified Language.Frut.Data.InputStream as IS
+import qualified Language.Frut.Js.Printer as JS
+import qualified Language.Frut.Optimizer as Opt
 import qualified Language.Frut.Parser as Parser
 import qualified Language.Frut.Pretty.Printer as PP
 import qualified Language.Frut.Syntax.AST as AST
@@ -57,6 +59,7 @@ commands :: [(String, [String] -> Repl ())]
 commands =
   [ ("help", help),
     ("parse", parse),
+    ("js", toJavaScript),
     ("format", format)
   ]
 
@@ -66,8 +69,12 @@ help _ =
     putText
       "\
       \Try these commands:\n\
-      \:parse  (or just :p) followed by <expression> - parses <expression>\n\
-      \:format (or just :f) followed by <expression> - formats <expression>\n\
+      \:parse  (or just :p) followed by <expression>\
+      \ - parses <expression>\n\
+      \:format (or just :f) followed by <expression>\
+      \ - formats <expression>\n\
+      \:js                  followed by <expression>\
+      \ - compiles <expression> to JavaScript\n\
       \:help   (or just :h) - prints this help\n"
 
 parse :: [String] -> Repl ()
@@ -79,7 +86,13 @@ parseExpr =
 
 format :: [String] -> Repl ()
 format =
-  parseExpr >=> putTextLn . either renderParseFail renderAnsi
+  putTextLn . either renderParseFail (renderAnsi . Opt.removeRedundantParens)
+    <=< parseExpr
+
+toJavaScript :: [String] -> Repl ()
+toJavaScript =
+  putTextLn . either renderParseFail (JS.renderExpr . Opt.removeRedundantParens)
+    <=< parseExpr
 
 renderParseFail :: Parser.ParseFail -> Text
 renderParseFail = fromString . ppShow

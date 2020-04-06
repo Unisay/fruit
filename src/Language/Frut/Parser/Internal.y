@@ -78,7 +78,9 @@ Expr :: { AST.ExpParsed }
   | Literal 
     { $1 }
   | '(' Expr ')' 
-    { $2 }
+    { AST.ScopeParsed ($1 # $3) $2 }
+  | indent Expr dedent 
+    { AST.ScopeParsed ($1 # $3) $2 }
 
 Literal :: { AST.ExpParsed }
   : decimal 
