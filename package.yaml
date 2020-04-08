@@ -53,13 +53,20 @@ executables:
   fruti:
     main: Main.hs
     source-dirs: exe/fruti
+    ghc-options:
+      - -threaded
     dependencies:
+      - exceptions
       - frut
-      - repline
+      - mtl
       - with-utf8
       - pretty-show
       - prettyprinter
       - prettyprinter-ansi-terminal
+      - repline
+      - text
+      - transformers
+      - typed-process
 
 library:
   source-dirs:

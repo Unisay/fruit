@@ -1,6 +1,9 @@
-resolver: lts-15.5
+resolver: lts-15.7
 packages:
   - .
-compiler-check: newer-minor
+# compiler-check: newer-minor
 extra-deps:
   - with-utf8-1.0.0.0@sha256:686e47588986d8080451b4e617118b579487dd4e085bba7bb36fac4198c90ae6,2480
+  - hoist-error-0.2.1.0@sha256:8c7e14b453bb913bcaefc103793978237d24bdb1af0e0419c5ad846d6bd400bd,1216
+  - haskeline-0.8.0.0
+  - repline-0.3.0.0

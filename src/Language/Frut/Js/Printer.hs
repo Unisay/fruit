@@ -32,7 +32,7 @@ printExpr = para \case
 
 printLiteral :: Literal -> Doc Js
 printLiteral = Doc.annotate JsLiteral . \case
-  Literal i -> Doc.unsafeViaShow i
+  Literal i -> bool identity Doc.parens (i < 0) . Doc.unsafeViaShow $ i
 
 printOperator :: Operator -> Doc Js
 printOperator = Doc.annotate JsOperator . \case

@@ -1,13 +1,17 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Main where
 
+import Control.Monad.Catch (throwM)
 import qualified Data.String as String
 import qualified Data.Text.Prettyprint.Doc as Doc
 import Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle, Color (..))
 import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Ansi
+import qualified Js.Eval as JS
 import qualified Language.Frut.Data.InputStream as IS
 import qualified Language.Frut.Js.Printer as JS
 import qualified Language.Frut.Optimizer as Opt
@@ -17,6 +21,11 @@ import qualified Language.Frut.Syntax.AST as AST
 import Main.Utf8 (withUtf8)
 import System.Console.Repline
 import Text.Show.Pretty (ppShow)
+
+newtype Error = ErrParser Parser.ParseFail
+  deriving stock (Show)
+
+instance Exception Error
 
 type Repl a = HaskelineT IO a
 
@@ -31,6 +40,11 @@ main = withUtf8 do
         tabComplete = Word0 completer,
         initialiser = ini
       }
+
+handleError :: Error -> IO ()
+handleError = \case
+  ErrParser parserFailure ->
+    putStrLn (ppShow parserFailure)
 
 -- Tab Completion: return a completion for partial words entered
 completer :: Monad m => WordCompleter m
@@ -78,24 +92,32 @@ help _ =
       \:help   (or just :h) - prints this help\n"
 
 parse :: [String] -> Repl ()
-parse = parseExpr >=> putStrLn . either ppShow ppShow
-
-parseExpr :: [String] -> Repl (Either Parser.ParseFail AST.ExpParsed)
-parseExpr =
-  pure . Parser.parse @AST.ExpParsed . IS.fromString . String.unwords
+parse args = do
+  expParsed <- parseExpr args
+  putTextLn "═════ Before optimizations: ═════"
+  putStrLn $ ppShow expParsed
+  putTextLn "═════ After optimizations: ═════"
+  putStrLn . ppShow $ Opt.optimize expParsed
 
 format :: [String] -> Repl ()
-format =
-  putTextLn . either renderParseFail (renderAnsi . Opt.removeRedundantParens)
-    <=< parseExpr
+format args = do
+  expParsed <- parseExpr args
+  let optimized = Opt.optimize expParsed
+  putTextLn . renderAnsi . Opt.optimize $ optimized
+
+parseExpr :: [String] -> Repl AST.ExpParsed
+parseExpr args = do
+  let input = IS.fromString . String.unwords $ args
+  either (throwM . ErrParser) pure $ Parser.parse @AST.ExpParsed input
 
 toJavaScript :: [String] -> Repl ()
-toJavaScript =
-  putTextLn . either renderParseFail (JS.renderExpr . Opt.removeRedundantParens)
-    <=< parseExpr
-
-renderParseFail :: Parser.ParseFail -> Text
-renderParseFail = fromString . ppShow
+toJavaScript args = do
+  expParsed <- parseExpr args
+  let optimized = Opt.optimize expParsed
+      javaScript = JS.renderExpr optimized
+  putTextLn $ "JS » " <> javaScript
+  evaluated <- JS.evalExpr javaScript
+  putTextLn evaluated
 
 renderAnsi :: AST.ExpParsed -> Text
 renderAnsi =

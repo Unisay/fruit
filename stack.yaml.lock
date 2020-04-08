@@ -11,9 +11,30 @@ packages:
       sha256: 39176872f0dde9f9e09c9cb9496e2b7b10fa17cb9a6eca8d40ca4b2dcaaacc11
   original:
     hackage: with-utf8-1.0.0.0@sha256:686e47588986d8080451b4e617118b579487dd4e085bba7bb36fac4198c90ae6,2480
+- completed:
+    hackage: hoist-error-0.2.1.0@sha256:8c7e14b453bb913bcaefc103793978237d24bdb1af0e0419c5ad846d6bd400bd,1216
+    pantry-tree:
+      size: 281
+      sha256: ded2c62f18e8c3f65ecf6986151db296832830e690994c6115ab608f1d36f720
+  original:
+    hackage: hoist-error-0.2.1.0@sha256:8c7e14b453bb913bcaefc103793978237d24bdb1af0e0419c5ad846d6bd400bd,1216
+- completed:
+    hackage: haskeline-0.8.0.0@sha256:0630452b759a5b40e0e3e7ca2ef4b0d55d5161d95e8d7b0dd3cf55888971437f,5440
+    pantry-tree:
+      size: 3013
+      sha256: 235d9b78cb87e21651fd36421c30ff4e0638e463fac7ec8b70887db06c3ff88f
+  original:
+    hackage: haskeline-0.8.0.0
+- completed:
+    hackage: repline-0.3.0.0@sha256:505265acd1e8c53de9eb8aebe096e6f734316aa4e7a3434e1a49e914cec78cdd,2101
+    pantry-tree:
+      size: 501
+      sha256: 8f2256094d0bf3b0bd51ac05a15cdb4ffe25d5ea30740ea26a3d5814c4d4e07e
+  original:
+    hackage: repline-0.3.0.0
 snapshots:
 - completed:
-    size: 491372
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/5.yaml
-    sha256: 1b549cfff328040c382a70a84a2087aac8dab6d778bf92f32a93a771a1980dfc
-  original: lts-15.5
+    size: 491389
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/7.yaml
+    sha256: 92ab6303fe20ec928461c82ce0980b4d17c06f4e66205a2967e476474f686c17
+  original: lts-15.7
