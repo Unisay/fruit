@@ -1,4 +1,8 @@
-# FRUIT - Functional Reactive programming language for User Interfaces
+# FRUIT
+
+## Functional Reactive User Interfaces
+
+### Programming Language
 
 
 * Prototype
