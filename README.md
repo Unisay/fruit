@@ -1,4 +1,4 @@
-# FRUT - Functional Reactive programming language for the Web
+# FRUIT - Functional Reactive programming language for User Interfaces
 
 
 * Prototype
