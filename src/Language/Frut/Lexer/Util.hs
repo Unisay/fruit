@@ -22,10 +22,21 @@ tokenStr :: (String -> Tok) -> AlexAction
 tokenStr f span _ str =
   pure . Just $ Spanned (f str) span
 
-tokenDec :: AlexAction
-tokenDec span _ str = do
-  let integer :: Integer = read str
-  pure . Just $ Spanned (Tok.Decimal integer) span
+tokenInteger :: AlexAction
+tokenInteger span _ str =
+  pure . Just $ Spanned (Tok.Integer $ read str) span
+
+tokenFloating :: AlexAction
+tokenFloating span _ str =
+  pure . Just $ Spanned (Tok.Floating $ read str) span
+
+tokenNaN :: AlexAction
+tokenNaN span _ _ =
+  pure . Just $ Spanned (Tok.Floating (0 / 0)) span
+
+tokenInfinity :: AlexAction
+tokenInfinity span _ _ =
+  pure . Just $ Spanned (Tok.Floating (1 / 0)) span
 
 startWhite :: AlexAction
 startWhite span@(Span startPos lastPos) n _ = do

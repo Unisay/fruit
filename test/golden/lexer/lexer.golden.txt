@@ -44,9 +44,9 @@ Right
   , Spanned RParen (Span (Position 126 9 11) (Position 127 9 12))
   , Spanned Dedent (Span (Position 128 10 1) (Position 128 10 1))
   , Spanned
-      (Decimal (-42)) (Span (Position 128 10 1) (Position 131 10 4))
+      (Integer (-42)) (Span (Position 128 10 1) (Position 131 10 4))
   , Spanned Newline (Span (Position 131 10 4) (Position 132 11 1))
   , Spanned
-      (Decimal 800101) (Span (Position 132 11 1) (Position 138 11 7))
+      (Integer 800101) (Span (Position 132 11 1) (Position 138 11 7))
   , Spanned Newline (Span (Position 138 11 7) (Position 139 12 1))
   ]

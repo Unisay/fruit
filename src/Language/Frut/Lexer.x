@@ -93,12 +93,15 @@ frut :-
 <0> "^" { token Tok.Pow }
 <0> "=" { token Tok.Equal }
 
+-- Literals
+<0> @signed @decimal { tokenInteger }
+<0> @signed @floating_point { tokenFloating }
+<0> "NaN" { tokenNaN }
+<0> "Infinity" { tokenInfinity }
+
 -- Identifiers
 <0> @lowerId { tokenStr (Tok.LowerId . mkIdent) }
 <0> @upperId { tokenStr (Tok.UpperId . mkIdent) }
-
--- Literals
-<0> @signed @decimal { tokenDec }
 
 {
 

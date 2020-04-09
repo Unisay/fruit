@@ -32,7 +32,8 @@ printExpr = para \case
 
 printLiteral :: Literal -> Doc Js
 printLiteral = Doc.annotate JsLiteral . \case
-  Literal i -> bool identity Doc.parens (i < 0) . Doc.unsafeViaShow $ i
+  LitInteger i -> bool identity Doc.parens (i < 0) . Doc.unsafeViaShow $ i
+  LitFloating d -> Doc.unsafeViaShow d
 
 printOperator :: Operator -> Doc Js
 printOperator = Doc.annotate JsOperator . \case

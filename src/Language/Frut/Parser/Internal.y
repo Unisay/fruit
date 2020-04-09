@@ -41,7 +41,8 @@ import Data.List.NonEmpty (NonEmpty(..), (<|))
   exports  { Spanned Tok.Exports _ }
   upperId  { Spanned (Tok.UpperId _) _ }
   lowerId  { Spanned (Tok.LowerId $$) _ }
-  decimal  { Spanned (Tok.Decimal _) _ }
+  integer  { Spanned (Tok.Integer _) _ }
+  floating { Spanned (Tok.Floating _) _ }
   -- let      { Spanned Tok.Let _ }
   -- in       { Spanned Tok.In _ }
   eof      { Spanned Tok.EOF _ }
@@ -83,9 +84,12 @@ Expr :: { AST.ExpParsed }
     { AST.ScopeParsed ($1 # $3) $2 }
 
 Literal :: { AST.ExpParsed }
-  : decimal 
+  : integer 
     { AST.LitParsed (spanOf $1) 
-      (let Tok.Decimal d = unspan $1 in AST.Literal d) }
+      (let Tok.Integer i = unspan $1 in AST.LitInteger i) }
+  | floating 
+    { AST.LitParsed (spanOf $1) 
+      (let Tok.Floating d = unspan $1 in AST.LitFloating d) }
 
 -- | List
 List(e)

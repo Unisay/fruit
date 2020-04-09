@@ -51,8 +51,9 @@ mkLitX = LitX (error "Attempt to evaluate void (LitX)")
 mkOpX :: Operator -> ExpX ξ -> ExpX ξ -> ExpX ξ
 mkOpX = OpX (error "Attempt to evaluate void (OpX)")
 
-newtype Literal
-  = Literal Integer
+data Literal
+  = LitInteger Integer
+  | LitFloating Double
   deriving stock (Eq, Ord, Show)
 
 data Operator

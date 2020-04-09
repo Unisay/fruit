@@ -22,7 +22,7 @@ group = $$(discover)
 prop_PrintParseRoundtrip :: Property
 prop_PrintParseRoundtrip = property do
   expr <- forAll Gen.exp
-  let expr' = reassoc . AST.toVanilla . Opt.removeRedundantParens $ expr
+  let expr' = reassoc . AST.toVanilla . Opt.optimize $ expr
   annotateShow expr'
   tripping
     expr'

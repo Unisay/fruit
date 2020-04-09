@@ -27,11 +27,20 @@ removeRedundantParens = \case
 
 foldConstants :: ExpParsed -> Maybe ExpParsed
 foldConstants = \case
-  OpX spanOp op (LitX _ (Literal l)) (LitX _ (Literal r)) ->
-    LitX spanOp <$> case op of
-      OperatorPlus -> Just . Literal $ l + r
-      OperatorMinus -> Just . Literal $ l - r
-      OperatorTimes -> Just . Literal $ l * r
-      OperatorPow -> Just . Literal $ l ^ r
-      OperatorDiv -> Nothing
+  OpX spanOp op (LitX _ (LitInteger l)) (LitX _ (LitInteger r)) ->
+    LitX spanOp
+      <$> case op of
+        OperatorPlus -> Just . LitInteger $ l + r
+        OperatorMinus -> Just . LitInteger $ l - r
+        OperatorTimes -> Just . LitInteger $ l * r
+        OperatorPow -> Nothing -- Grows to fast
+        OperatorDiv -> Nothing
+  OpX spanOp op (LitX _ (LitFloating l)) (LitX _ (LitFloating r)) ->
+    LitX spanOp
+      <$> case op of
+        OperatorPlus -> Just . LitFloating $ l + r
+        OperatorMinus -> Just . LitFloating $ l - r
+        OperatorTimes -> Just . LitFloating $ l * r
+        OperatorPow -> Nothing
+        OperatorDiv -> Just . LitFloating $ l / r
   _ -> Nothing

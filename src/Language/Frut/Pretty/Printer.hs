@@ -42,7 +42,8 @@ printExpr = toVanilla >>> para \case
 
 printLiteral :: Literal -> Doc Ann
 printLiteral = Doc.annotate AnnLiteral . \case
-  Literal i -> Doc.unsafeViaShow i
+  LitInteger i -> Doc.unsafeViaShow i
+  LitFloating d -> Doc.unsafeViaShow d
 
 printOperator :: Operator -> Doc Ann
 printOperator = Doc.annotate AnnOperator . \case

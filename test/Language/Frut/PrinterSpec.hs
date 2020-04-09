@@ -32,13 +32,13 @@ parens :: ExpVanilla -> ExpVanilla
 parens = ScopeVanilla
 
 _2 :: ExpVanilla
-_2 = LitVanilla (Literal 2)
+_2 = LitVanilla (LitInteger 2)
 
 _4 :: ExpVanilla
-_4 = LitVanilla (Literal 4)
+_4 = LitVanilla (LitInteger 4)
 
 _8 :: ExpVanilla
-_8 = LitVanilla (Literal 8)
+_8 = LitVanilla (LitInteger 8)
 
 plus :: ExpVanilla -> ExpVanilla -> ExpVanilla
 plus = OpVanilla OperatorPlus
