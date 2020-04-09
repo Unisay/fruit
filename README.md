@@ -9,6 +9,6 @@
 * WIP
 
 ```
-stack run -- --file hello.frut
+stack run -- --file hello.fruit
 Right (SourceFile Module)
 ```

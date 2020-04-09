@@ -1,0 +1,15 @@
+module Hello.Wonderful.World
+
+exports -- (export1, export2, export3)
+  - export1
+  - export2
+  - export3
+
+imports 
+  - Example.Import0
+  - Example.Import1
+    - foo
+  - Example.Import2
+    - bar
+    - baz
+  - Example.Import3 (f1, f2, f3)

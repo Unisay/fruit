@@ -1,16 +1,16 @@
-name: frut
+name: fruit
 version: "0.1.0.0"
 category: Compiler, Language
 author: Yuriy Lazarev
 maintainer: unisay@users.noreply.github.com
 bug-reports: unisay@users.noreply.github.com
 synopsis: >
-  The `frut` command line interface.
+  The `fruit` command line interface.
 description: >
-  FRUT - Functional Reactive programming language for the Web
+  FRUIT - Functional Reactive programming language for the Web
 
 copyright: Yuriy Lazarev
-github: Unisay/frut
+github: Unisay/fruit
 license: MIT
 extra-source-files:
   - README.md
@@ -41,23 +41,23 @@ dependencies:
       - (Relude as Prelude, Relude.Unsafe)
 
 executables:
-  frutc:
+  fruitc:
     main: Main.hs
-    source-dirs: exe/frutc
+    source-dirs: exe/fruitc
     dependencies:
-      - frut
+      - fruit
       - optparse-applicative
       - pathtype
       - pretty-show
       - with-utf8
-  fruti:
+  fruiti:
     main: Main.hs
-    source-dirs: exe/fruti
+    source-dirs: exe/fruiti
     ghc-options:
       - -threaded
     dependencies:
       - exceptions
-      - frut
+      - fruit
       - mtl
       - with-utf8
       - pretty-show
@@ -89,7 +89,7 @@ tests:
     source-dirs:
       - test
     dependencies:
-      - frut
+      - fruit
       - filepath
       - pretty-show
       - hedgehog

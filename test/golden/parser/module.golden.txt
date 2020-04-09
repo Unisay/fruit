@@ -1,10 +1,44 @@
 Right
   (SourceFile
      (Module
-        ("Hello" :| [ "Wonderful" , "World" ])
-        (Exports ("export1" :| [ "export2" , "export3" ]))
-        [ Import ("Example" :| [ "Import0" ]) []
-        , Import ("Example" :| [ "Import1" ]) [ "foo" ]
-        , Import ("Example" :| [ "Import2" ]) [ "bar" , "baz" ]
-        , Import ("Example" :| [ "Import3" ]) [ "f1" , "f2" , "f3" ]
+        (Spanned "Hello" (Span (Position 7 1 8) (Position 12 1 13)) :|
+           [ Spanned "Wonderful" (Span (Position 13 1 14) (Position 22 1 23))
+           , Spanned "World" (Span (Position 23 1 24) (Position 28 1 29))
+           ])
+        (Exports
+           (Spanned "export1" (Span (Position 73 4 5) (Position 80 4 12)) :|
+              [ Spanned "export2" (Span (Position 85 5 5) (Position 92 5 12))
+              , Spanned "export3" (Span (Position 97 6 5) (Position 104 6 12))
+              ]))
+        [ Import
+            (Spanned "Example" (Span (Position 119 9 5) (Position 126 9 12)) :|
+               [ Spanned "Import0" (Span (Position 127 9 13) (Position 134 9 20))
+               ])
+            []
+        , Import
+            (Spanned
+               "Example" (Span (Position 139 10 5) (Position 146 10 12)) :|
+               [ Spanned
+                   "Import1" (Span (Position 147 10 13) (Position 154 10 20))
+               ])
+            [ Spanned "foo" (Span (Position 161 11 7) (Position 164 11 10)) ]
+        , Import
+            (Spanned
+               "Example" (Span (Position 169 12 5) (Position 176 12 12)) :|
+               [ Spanned
+                   "Import2" (Span (Position 177 12 13) (Position 184 12 20))
+               ])
+            [ Spanned "bar" (Span (Position 191 13 7) (Position 194 13 10))
+            , Spanned "baz" (Span (Position 201 14 7) (Position 204 14 10))
+            ]
+        , Import
+            (Spanned
+               "Example" (Span (Position 209 15 5) (Position 216 15 12)) :|
+               [ Spanned
+                   "Import3" (Span (Position 217 15 13) (Position 224 15 20))
+               ])
+            [ Spanned "f1" (Span (Position 226 15 22) (Position 228 15 24))
+            , Spanned "f2" (Span (Position 230 15 26) (Position 232 15 28))
+            , Spanned "f3" (Span (Position 234 15 30) (Position 236 15 32))
+            ]
         ]))
