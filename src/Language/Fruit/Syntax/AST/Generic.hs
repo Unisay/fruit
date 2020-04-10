@@ -29,12 +29,15 @@ data Import
 
 -- | Najd S., Jones S.P.: Trees that Grow
 data ExpX ξ
-  = LitX (XLit ξ) Literal
+  = AppX (XApp ξ) (ExpX ξ) (ExpX ξ)
+  | LitX (XLit ξ) Literal
   | VarX (XVar ξ) Var
   | LetX (XLet ξ) Var (ExpX ξ) (ExpX ξ)
   | OpX (XOp ξ) Operator (ExpX ξ) (ExpX ξ)
   | ScopeX (XScope ξ) (ExpX ξ)
   | ExpX !(XExp ξ)
+
+type family XApp ξ
 
 type family XLit ξ
 

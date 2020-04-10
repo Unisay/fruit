@@ -1,14 +1,31 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NamedFieldPuns #-}
 
 module Language.Fruit.Js.Printer where
 
 import Data.Generics.Uniplate (para)
-import qualified Data.Text.Prettyprint.Doc as Doc
-import Data.Text.Prettyprint.Doc ((<+>), Doc)
+import qualified Data.List.NonEmpty as NEL
+import Data.Text.Prettyprint.Doc
+  ( (<+>),
+    Doc,
+    annotate,
+    concatWith,
+    defaultLayoutOptions,
+    dot,
+    equals,
+    equals,
+    hsep,
+    layoutPretty,
+    parens,
+    pretty,
+    slash,
+    space,
+    surround,
+    unsafeViaShow,
+  )
 import qualified Data.Text.Prettyprint.Doc.Render.Text as Doc
 import Language.Fruit.Data.Ident (Ident (..))
+import Language.Fruit.Data.Span (unspan)
 import Language.Fruit.Syntax.AST
 
 data Js
@@ -19,51 +36,46 @@ data Js
   deriving (Eq, Show)
 
 renderExpr :: ExpParsed -> Text
-renderExpr =
-  Doc.renderStrict
-    . Doc.layoutPretty Doc.defaultLayoutOptions
-    . printExpr
+renderExpr = Doc.renderStrict . layoutPretty defaultLayoutOptions . printExpr
 
 printExpr :: ExpParsed -> Doc Js
 printExpr = para \case
-  ScopeX _ _ ->
-    Doc.parens . Doc.hsep
+  AppX {} ->
+    hsep . fmap parens
+  ScopeX {} ->
+    parens . hsep
   LitX _ literal ->
     const (printLiteral literal)
   VarX _ var ->
     const (printVariable var)
   LetX _ var _ _ ->
     \xs ->
-      kwLet
+      annotate JsKeyword "let"
         <+> printVariable var
-        <+> Doc.pretty '='
-        <+> Doc.concatWith
-          (Doc.surround (Doc.surround kwIn Doc.space Doc.space))
+        <+> equals
+        <+> concatWith
+          (surround (surround (annotate JsKeyword "in") space space))
           xs
   OpX _ op _ _ ->
-    Doc.concatWith
-      (Doc.surround (Doc.surround (printOperator op) Doc.space Doc.space))
+    concatWith (surround (surround (printOperator op) space space))
 
 printLiteral :: Literal -> Doc Js
-printLiteral = Doc.annotate JsLiteral . \case
-  LitInteger i -> bool identity Doc.parens (i < 0) . Doc.unsafeViaShow $ i
-  LitFloating d -> Doc.unsafeViaShow d
+printLiteral = annotate JsLiteral . \case
+  LitInteger i -> bool identity parens (i < 0) . unsafeViaShow $ i
+  LitFloating d -> unsafeViaShow d
 
 printVariable :: Var -> Doc Js
-printVariable = Doc.annotate JsIdentifier . \case
-  VarQualified idents -> undefined
-  VarUnqualified Ident {name} -> Doc.pretty name
+printVariable = annotate JsIdentifier . \case
+  VarQualified idents ->
+    concatWith (surround dot) . NEL.toList $
+      pretty . name . unspan <$> idents
+  VarUnqualified ident ->
+    pretty . name $ ident
 
 printOperator :: Operator -> Doc Js
-printOperator = Doc.annotate JsOperator . \case
-  OperatorPlus -> Doc.pretty '+'
-  OperatorMinus -> Doc.pretty '-'
-  OperatorTimes -> Doc.pretty '*'
-  OperatorDiv -> Doc.slash
-  OperatorPow -> Doc.pretty '^'
-
-kwLet :: Doc Js
-kwLet = Doc.annotate JsKeyword "let"
-
-kwIn :: Doc Js
-kwIn = Doc.annotate JsKeyword "in"
+printOperator = annotate JsOperator . \case
+  OperatorPlus -> pretty '+'
+  OperatorMinus -> pretty '-'
+  OperatorTimes -> pretty '*'
+  OperatorDiv -> slash
+  OperatorPow -> pretty '^'

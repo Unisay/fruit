@@ -12,6 +12,8 @@ import Unsafe.Coerce (unsafeCoerce)
 
 data Vanilla
 
+type instance XApp Vanilla = ()
+
 type instance XLit Vanilla = ()
 
 type instance XVar Vanilla = ()
@@ -32,6 +34,8 @@ deriving instance Show ExpVanilla
 
 instance Uniplate ExpVanilla where
   uniplate = \case
+    AppX _ a b ->
+      ([a, b], \case [a', b'] -> AppVanilla a' b'; _ -> failMatch "AppVanilla")
     ScopeX _ e ->
       ([e], \case [a'] -> ScopeVanilla a'; _ -> failMatch "ScopeVanilla")
     OpX _ op a b ->
@@ -46,6 +50,12 @@ instance Uniplate ExpVanilla where
     x@LitX {} -> (mempty, const x)
     x@VarX {} -> (mempty, const x)
     x@ExpX {} -> (mempty, const x)
+
+pattern AppVanilla :: ExpVanilla -> ExpVanilla -> ExpVanilla
+pattern AppVanilla e1 e2 <-
+  AppX _ e1 e2
+  where
+    AppVanilla e1 e2 = AppX () e1 e2
 
 pattern LitVanilla :: Literal -> ExpVanilla
 pattern LitVanilla i <-

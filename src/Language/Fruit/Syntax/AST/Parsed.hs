@@ -12,6 +12,8 @@ import Language.Fruit.Syntax.AST.Generic
 
 data Parsed
 
+type instance XApp Parsed = ()
+
 type instance XLit Parsed = Span
 
 type instance XVar Parsed = Span
@@ -32,6 +34,12 @@ deriving instance Show ExpParsed
 
 instance Uniplate ExpParsed where
   uniplate = \case
+    AppX sp a b ->
+      ( [a, b],
+        \case
+          [a', b'] -> AppX sp a' b'
+          _ -> failMatch "AppX"
+      )
     ScopeX sp a ->
       ( [a],
         \case
@@ -53,6 +61,12 @@ instance Uniplate ExpParsed where
     -- Case per leaf node in order not to disable exhaustveness checker
     x@(LitX _ _) -> (mempty, const x)
     x@(VarX _ _) -> (mempty, const x)
+
+pattern AppParsed :: ExpParsed -> ExpParsed -> ExpParsed
+pattern AppParsed e1 e2 <-
+  AppX _ e1 e2
+  where
+    AppParsed e1 e2 = AppX () e1 e2
 
 pattern LitParsed :: Span -> Literal -> ExpParsed
 pattern LitParsed span i <-
@@ -81,5 +95,5 @@ pattern OpParsed span op e1 e2 <-
 pattern ScopeParsed :: Span -> ExpParsed -> ExpParsed
 pattern ScopeParsed span e <-
   ScopeX span e
-  where 
+  where
     ScopeParsed span e = ScopeX span e

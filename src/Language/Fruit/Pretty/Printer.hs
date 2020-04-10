@@ -1,7 +1,6 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NamedFieldPuns #-}
 
 module Language.Fruit.Pretty.Printer
   ( renderExpr,
@@ -11,10 +10,27 @@ module Language.Fruit.Pretty.Printer
 where
 
 import Data.Generics.Uniplate (para)
+import qualified Data.List.NonEmpty as NEL
 import qualified Data.Text.Prettyprint.Doc as Doc
-import Data.Text.Prettyprint.Doc ((<+>), Doc)
+import Data.Text.Prettyprint.Doc
+  ( (<+>),
+    Doc,
+    annotate,
+    concatWith,
+    dot,
+    equals,
+    hcat,
+    hsep,
+    parens,
+    pretty,
+    slash,
+    space,
+    surround,
+    unsafeViaShow,
+  )
 import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Ansi
 import Language.Fruit.Data.Ident (Ident (..))
+import Language.Fruit.Data.Span (unspan)
 import Language.Fruit.Syntax.AST
 import Prelude hiding ((<>))
 
@@ -34,46 +50,45 @@ renderExpr =
 
 printExpr :: ExpX ξ -> Doc Ann
 printExpr = toVanilla >>> para \case
+  AppX _ _ _ ->
+    hsep
   ScopeX _ _ ->
-    Doc.parens . Doc.hsep
+    parens . hsep
   LitX _ literal ->
     const (printLiteral literal)
   VarX _ var ->
     const (printVariable var)
   LetX _ var _ _ ->
     \xs ->
-      kwLet
+      annotate AnnKeyword "let"
         <+> printVariable var
-        <+> Doc.pretty '='
-        <+> Doc.concatWith
-          (Doc.surround (Doc.surround kwIn Doc.space Doc.space))
-          xs
+        <+> equals
+        <+> concatWith (surround (surround kwIn space space)) xs
+    where
+      kwIn :: Doc Ann
+      kwIn = annotate AnnKeyword "in"
   OpX _ op _ _ ->
-    Doc.concatWith
-      (Doc.surround (Doc.surround (printOperator op) Doc.space Doc.space))
+    concatWith (surround (surround (printOperator op) space space))
   ExpX _ ->
-    Doc.hcat
+    hcat
 
 printLiteral :: Literal -> Doc Ann
-printLiteral = Doc.annotate AnnLiteral . \case
-  LitInteger i -> Doc.unsafeViaShow i
-  LitFloating d -> Doc.unsafeViaShow d
+printLiteral = annotate AnnLiteral . \case
+  LitInteger i -> unsafeViaShow i
+  LitFloating d -> unsafeViaShow d
 
 printVariable :: Var -> Doc Ann
-printVariable = Doc.annotate AnnIdentifier . \case
-  VarQualified idents -> undefined
-  VarUnqualified Ident {name} -> Doc.pretty name
+printVariable = annotate AnnIdentifier . \case
+  VarQualified idents ->
+    concatWith (surround dot) . NEL.toList $
+      pretty . name . unspan <$> idents
+  VarUnqualified ident ->
+    pretty . name $ ident
 
 printOperator :: Operator -> Doc Ann
-printOperator = Doc.annotate AnnOperator . \case
-  OperatorPlus -> Doc.pretty '+'
-  OperatorMinus -> Doc.pretty '-'
-  OperatorTimes -> Doc.pretty '*'
-  OperatorDiv -> Doc.slash
-  OperatorPow -> Doc.pretty '^'
-
-kwLet :: Doc Ann
-kwLet = Doc.annotate AnnKeyword "let"
-
-kwIn :: Doc Ann
-kwIn = Doc.annotate AnnKeyword "in"
+printOperator = annotate AnnOperator . \case
+  OperatorPlus -> pretty '+'
+  OperatorMinus -> pretty '-'
+  OperatorTimes -> pretty '*'
+  OperatorDiv -> slash
+  OperatorPow -> pretty '^'

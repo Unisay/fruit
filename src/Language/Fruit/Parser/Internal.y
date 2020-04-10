@@ -13,7 +13,7 @@ import Language.Fruit.Parser.Reversed
 import Language.Fruit.Syntax.Tok
 import Relude.Unsafe ((!!))
 import qualified Data.List.NonEmpty as NEL
-import Data.List.NonEmpty (NonEmpty(..), (<|))
+import Data.List.NonEmpty (NonEmpty(..))
 }
 
 %name parseModule
@@ -67,26 +67,31 @@ Import :: { AST.Import }
   : UpperQName List(LowerId) { AST.Import $1 $2 }
 
 Expr :: { AST.ExpParsed }
-  : Expr '+' Expr 
+  : Atom many(nl) Expr { AST.AppParsed $1 $3 } 
+  | Atom { $1 }
+
+Atom :: { AST.ExpParsed }
+  : Atom '+' Atom 
     { AST.OpParsed (spanOf $2) AST.OperatorPlus $1 $3 }
-  | Expr '-' Expr 
+  | Atom '-' Atom 
     { AST.OpParsed (spanOf $2) AST.OperatorMinus $1 $3 }
-  | Expr '*' Expr
+  | Atom '*' Atom
     { AST.OpParsed (spanOf $2) AST.OperatorTimes $1 $3 }
-  | Expr '/' Expr
+  | Atom '/' Atom
     { AST.OpParsed (spanOf $2) AST.OperatorDiv $1 $3 }
-  | Expr '^' Expr
+  | Atom '^' Atom
     { AST.OpParsed (spanOf $2) AST.OperatorPow $1 $3 }
   | Literal 
     { $1 }
   | Variable
     { AST.VarParsed (spanOf $1) (unspan $1) }
-  | let Variable '=' Expr in Expr
+  | let Variable '=' Expr in Atom
     { AST.LetParsed ($1 # $3) (unspan $2) $4 $6 }
   | '(' Expr ')' 
     { AST.ScopeParsed ($1 # $3) $2 }
   | indent Expr dedent 
     { AST.ScopeParsed ($1 # $3) $2 }
+
 
 Literal :: { AST.ExpParsed }
   : integer 
@@ -144,8 +149,8 @@ UpperQName :: { AST.QualifiedName }
 
 -- | One or more occurences of 'p'
 some(p) :: { Reversed NonEmpty p }
-  : some(p) p             { let Reversed xs = $1 in Reversed ($2 <| xs) }
-  | p                     { [$1] }
+  : some(p) p             { let Reversed xs = $1 in Reversed (NEL.cons $2 xs) }
+  | p                     { Reversed (pure $1) }
 
 -- | Zero or more occurences of 'p'
 many(p) :: { [ p ] }
@@ -154,7 +159,7 @@ many(p) :: { [ p ] }
 
 -- | One or more occurences of 'p', seperated by 'sep'
 sep_by1(p,sep) :: { Reversed NonEmpty p }
-  : sep_by1(p,sep) sep p  { let Reversed xs = $1 in Reversed ($3 <| xs) }
+  : sep_by1(p,sep) sep p  { let Reversed xs = $1 in Reversed (NEL.cons $3 xs) }
   | p                     { [$1] }
 
 -- | Zero or more occurrences of 'p', separated by 'sep'
