@@ -1,40 +1,23 @@
 {-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Main where
 
-import Control.Monad.Catch (throwM)
-import qualified Data.String as String
-import qualified Data.Text.Prettyprint.Doc as Doc
-import Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle, Color (..))
-import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Ansi
-import qualified Js.Eval as JS
-import qualified Language.Fruit.Data.InputStream as IS
-import qualified Language.Fruit.Js.Printer as JS
-import qualified Language.Fruit.Optimizer as Opt
-import qualified Language.Fruit.Parser as Parser
-import qualified Language.Fruit.Pretty.Printer as PP
-import qualified Language.Fruit.Syntax.AST as AST
+import qualified Command
+import qualified Data.String as Str
+import Error
 import Main.Utf8 (withUtf8)
+import ReplM
 import System.Console.Repline
 import Text.Show.Pretty (ppShow)
 
-newtype Error = ErrParser Parser.ParseFail
-  deriving stock (Show)
-
-instance Exception Error
-
-type Repl a = HaskelineT IO a
-
 main :: IO ()
 main = withUtf8 do
-  evalReplOpts
+  runReplM
     ReplOpts
       { banner = pure "Fruit » ",
-        command = cmd,
+        command = Command.empty . Str.words,
         options = commands,
         prefix = Just ':',
         tabComplete = Word0 completer,
@@ -63,18 +46,13 @@ ini =
       \ \n\n\
       \(type :help for a list of available commands) \n"
 
-cmd :: String -> Repl ()
-cmd args = dontCrash do
-  expr <- parseExpr [args]
-  formatExpr expr
-  printExpr expr
-
 commands :: [(String, [String] -> Repl ())]
 commands =
   [ ("help", help),
-    ("parse", parse),
-    ("js", toJavaScript),
-    ("format", format)
+    ("parse", Command.parse),
+    ("jsf", Command.javaScriptFormat),
+    ("jse", Command.javaScriptEval),
+    ("format", Command.format)
   ]
 
 help :: [String] -> Repl ()
@@ -87,57 +65,8 @@ help _ =
       \ - parses <expression>\n\
       \:format (or just :f) followed by <expression>\
       \ - formats <expression>\n\
-      \:js                  followed by <expression>\
-      \ - compiles <expression> to JavaScript\n\
+      \:jsf                 followed by <expression>\
+      \ - compiles <expression> to JavaScript and prints it\n\
+      \:jse                 followed by <expression>\
+      \ - compiles <expression> to JavaScript and evaluates it\n\
       \:help   (or just :h) - prints this help\n"
-
-parse :: [String] -> Repl ()
-parse args = dontCrash do
-  expr <- parseExpr args
-  printExpr expr
-
-printExpr :: AST.ExpParsed -> Repl ()
-printExpr expr = do 
-  putTextLn "═════ Before optimizations: ═════"
-  putStrLn $ ppShow expr
-  putTextLn "═════ After optimizations: ═════"
-  putStrLn . ppShow $ Opt.optimize expr
-
-format :: [String] -> Repl ()
-format args = dontCrash do
-  expr <- parseExpr args
-  formatExpr expr
-
-formatExpr :: AST.ExpParsed -> Repl ()
-formatExpr expr = do
-  let optimized = Opt.optimize expr
-  putTextLn . renderAnsi . Opt.optimize $ optimized
-
-
-parseExpr :: [String] -> Repl AST.ExpParsed
-parseExpr args = do
-  let input = IS.fromString . String.unwords $ args
-  either (throwM . ErrParser) pure $ Parser.parse @AST.ExpParsed input
-
-toJavaScript :: [String] -> Repl ()
-toJavaScript args = do
-  expr <- parseExpr args
-  let optimized = Opt.optimize expr
-      javaScript = JS.renderExpr optimized
-  putTextLn $ "JS » " <> javaScript
-  evaluated <- JS.evalExpr javaScript
-  putTextLn evaluated
-
-renderAnsi :: AST.ExpParsed -> Text
-renderAnsi =
-  Ansi.renderStrict
-    . Doc.layoutPretty Doc.defaultLayoutOptions
-    . Doc.reAnnotate colorScheme
-    . PP.printExpr
-
-colorScheme :: PP.Ann -> AnsiStyle
-colorScheme = \case
-  PP.AnnOperator -> Ansi.color Cyan
-  PP.AnnLiteral -> Ansi.color Red
-  PP.AnnIdentifier -> Ansi.color Magenta
-  PP.AnnKeyword -> Ansi.color Green

@@ -17,7 +17,7 @@ import Data.List.NonEmpty (NonEmpty(..))
 }
 
 %name parseModule
-%name parseExpression Expr
+%name parseTerm Term
 %error { parseError }
 %tokentype { Spanned Tok }
 %lexer { lexToken >>= } { Spanned Tok.EOF _ }
@@ -29,12 +29,15 @@ import Data.List.NonEmpty (NonEmpty(..))
   '-'      { Spanned Tok.Dash _ }
   '+'      { Spanned Tok.Plus _ }
   '*'      { Spanned Tok.Times _ }
+  'λ'      { Spanned Tok.Lambda _ }
   '/'      { Spanned Tok.Div _ }
   '^'      { Spanned Tok.Pow _ }
   '.'      { Spanned Tok.Dot _ }
   ','      { Spanned Tok.Comma _ }
   '('      { Spanned Tok.LParen _ } 
   ')'      { Spanned Tok.RParen _ } 
+  rightArr { Spanned Tok.RightArrow _ }
+  leftArr  { Spanned Tok.LeftArrow _ }
   indent   { Spanned Tok.Indent _ }
   dedent   { Spanned Tok.Dedent _ }
   module   { Spanned Tok.Module _ }
@@ -47,10 +50,11 @@ import Data.List.NonEmpty (NonEmpty(..))
   let      { Spanned Tok.Let _ }
   in       { Spanned Tok.In _ }
   eof      { Spanned Tok.EOF _ }
+%right let in
 %left '+' '-'
 %left '*' '/'
 %right '^'
-%right let in
+%right 'λ' '.'
 %%
 
 Module :: { AST.Module }
@@ -66,44 +70,46 @@ Imports :: { [AST.Import] }
 Import :: { AST.Import }
   : UpperQName List(LowerId) { AST.Import $1 $2 }
 
-Expr :: { AST.ExpParsed }
-  : Atom many(nl) Expr { AST.AppParsed $1 $3 } 
+Term :: { AST.Term }
+  : Term Atom { AST.TermApp $1 $2 } 
   | Atom { $1 }
 
-Atom :: { AST.ExpParsed }
-  : Atom '+' Atom 
-    { AST.OpParsed (spanOf $2) AST.OperatorPlus $1 $3 }
+Atom :: { AST.Term }
+  : 'λ' Variable '.' Atom
+    { AST.TermLam ($1 # $3) (unspan $2) $4 }
+  | Atom '+' Atom 
+    { AST.TermFun (spanOf $2) AST.Plus $1 $3 }
   | Atom '-' Atom 
-    { AST.OpParsed (spanOf $2) AST.OperatorMinus $1 $3 }
+    { AST.TermFun (spanOf $2) AST.Minus $1 $3 }
   | Atom '*' Atom
-    { AST.OpParsed (spanOf $2) AST.OperatorTimes $1 $3 }
+    { AST.TermFun (spanOf $2) AST.Times $1 $3 }
   | Atom '/' Atom
-    { AST.OpParsed (spanOf $2) AST.OperatorDiv $1 $3 }
+    { AST.TermFun (spanOf $2) AST.Div $1 $3 }
   | Atom '^' Atom
-    { AST.OpParsed (spanOf $2) AST.OperatorPow $1 $3 }
+    { AST.TermFun (spanOf $2) AST.Pow $1 $3 }
   | Literal 
     { $1 }
   | Variable
-    { AST.VarParsed (spanOf $1) (unspan $1) }
-  | let Variable '=' Expr in Atom
-    { AST.LetParsed ($1 # $3) (unspan $2) $4 $6 }
-  | '(' Expr ')' 
-    { AST.ScopeParsed ($1 # $3) $2 }
-  | indent Expr dedent 
-    { AST.ScopeParsed ($1 # $3) $2 }
+    { AST.TermVar (spanOf $1) (unspan $1) }
+  | let Variable '=' Term in Atom
+    { AST.TermLet ($1 # $3) (unspan $2) $4 $6 }
+  | '(' Term ')' 
+    { AST.TermScope ($1 # $3) $2 }
+  | indent Term dedent 
+    { AST.TermScope ($1 # $3) $2 }
 
 
-Literal :: { AST.ExpParsed }
+Literal :: { AST.Term }
   : integer 
     { let Spanned (Tok.Integer i) span = $1 
-       in AST.LitParsed span (AST.LitInteger i) }
+       in AST.TermLit span (AST.LitInteger i) }
   | floating 
     { let Spanned (Tok.Floating d) span = $1 
-       in AST.LitParsed span (AST.LitFloating d) }
+       in AST.TermLit span (AST.LitFloating d) }
 
 Variable :: { Spanned AST.Var }
   : LowerId
-  	{ Spanned (AST.VarUnqualified (unspan $1)) (spanOf $1) }
+  	{ Spanned (AST.Var (unspan $1)) (spanOf $1) }
 
 LowerId :: { Spanned Ident }
   : lowerId

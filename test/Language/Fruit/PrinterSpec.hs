@@ -5,8 +5,8 @@ module Language.Fruit.PrinterSpec
   )
 where
 
-import qualified Language.Fruit.Pretty.Printer as PP
 import Language.Fruit.Syntax.AST
+import qualified Language.Fruit.Syntax.Printer as PP
 import Test.Hspec hiding (shouldBe)
 import Test.Hspec.Expectations.Pretty
 import Prelude hiding (div)
@@ -17,31 +17,31 @@ printerSpec =
     describe "different precedence" do
       it "2 + (4 * 8)  ->  2 + 4 * 8" $
         let e = _2 `plus` parens (_4 `times` _8)
-         in PP.renderExpr e `shouldBe` "2 + (4 * 8)"
+         in PP.renderTerm e `shouldBe` "2 + (4 * 8)"
       it "(4 * 8) + 2  ->  4 * 8 + 2" $
         let e = parens (_4 `times` _8) `plus` _2
-         in PP.renderExpr e `shouldBe` "(4 * 8) + 2"
+         in PP.renderTerm e `shouldBe` "(4 * 8) + 2"
       it "2 * (4 + 8)  ->  2 * (4 + 8)" $
         let e = _2 `times` parens (_4 `plus` _8)
-         in PP.renderExpr e `shouldBe` "2 * (4 + 8)"
+         in PP.renderTerm e `shouldBe` "2 * (4 + 8)"
       it "(4 + 8) * 2  ->  (4 + 8) * 2" $
         let e = parens (_4 `plus` _8) `times` _2
-         in PP.renderExpr e `shouldBe` "(4 + 8) * 2"
+         in PP.renderTerm e `shouldBe` "(4 + 8) * 2"
 
-parens :: ExpVanilla -> ExpVanilla
-parens = ScopeVanilla
+parens :: Term -> Term
+parens = TermScope mempty
 
-_2 :: ExpVanilla
-_2 = LitVanilla (LitInteger 2)
+_2 :: Term
+_2 = TermLit mempty (LitInteger 2)
 
-_4 :: ExpVanilla
-_4 = LitVanilla (LitInteger 4)
+_4 :: Term
+_4 = TermLit mempty (LitInteger 4)
 
-_8 :: ExpVanilla
-_8 = LitVanilla (LitInteger 8)
+_8 :: Term
+_8 = TermLit mempty (LitInteger 8)
 
-plus :: ExpVanilla -> ExpVanilla -> ExpVanilla
-plus = OpVanilla OperatorPlus
+plus :: Term -> Term -> Term
+plus = TermFun mempty Plus
 
-times :: ExpVanilla -> ExpVanilla -> ExpVanilla
-times = OpVanilla OperatorTimes
+times :: Term -> Term -> Term
+times = TermFun mempty Times

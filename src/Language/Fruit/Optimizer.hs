@@ -12,9 +12,9 @@ import Language.Fruit.Syntax.Precedence
     prec,
   )
 
-type Reduction = ExpParsed -> Maybe ExpParsed
+type Reduction = Term -> Maybe Term
 
-optimize :: ExpParsed -> ExpParsed
+optimize :: Term -> Term
 optimize =
   rewrite . foldl1 (liftA2 (<|>)) $
     removeRedundantParens
@@ -26,87 +26,101 @@ optimize =
 
 removeRedundantParens :: Reduction
 removeRedundantParens = \case
-  OpX x op e1 (ScopeX _ (OpX x' op' e1' e2'))
-    | prec op <= prec op' && associatesRight op && associatesRight op' ->
-      Just $ OpX x op e1 (OpX x' op' e1' e2')
-  OpX x op (ScopeX _ (OpX x' op' e1' e2')) e2
-    | prec op <= prec op' && associatesLeft op && associatesLeft op' ->
+  TermFun x fun e1 (TermScope _ (TermFun x' fun' e1' e2'))
+    | prec fun <= prec fun' && associatesRight fun && associatesRight fun' ->
+      Just $ TermFun x fun e1 (TermFun x' fun' e1' e2')
+  TermFun x fun (TermScope _ (TermFun x' fun' e1' e2')) e2
+    | prec fun <= prec fun' && associatesLeft fun && associatesLeft fun' ->
       Just $
-        OpX x op (OpX x' op' e1' e2') e2
-  ScopeX _ (LitParsed x lit) -> Just $ LitParsed x lit
-  ScopeX _ (VarParsed x var) -> Just $ VarParsed x var
+        TermFun x fun (TermFun x' fun' e1' e2') e2
+  TermScope _ (TermLit x lit) -> Just $ TermLit x lit
+  TermScope _ (TermVar x var) -> Just $ TermVar x var
   _ -> Nothing
 
 replaceSubtractionBySummation :: Reduction
 replaceSubtractionBySummation = \case
-  OpX sp OperatorMinus e (LitX sp' (LitInteger i)) ->
-    Just $ OpX sp OperatorPlus e (LitX sp' (LitInteger (negate i)))
-  OpX sp OperatorMinus (LitX sp' (LitInteger i)) e ->
-    Just $ OpX sp OperatorPlus (LitX sp' (LitInteger (negate i))) e
-  OpX sp OperatorMinus e (LitX sp' (LitFloating i)) ->
-    Just $ OpX sp OperatorPlus e (LitX sp' (LitFloating (negate i)))
-  OpX sp OperatorMinus (LitX sp' (LitFloating i)) e ->
-    Just $ OpX sp OperatorPlus (LitX sp' (LitFloating (negate i))) e
+  TermFun sp Minus e (TermLit sp' (LitInteger i)) ->
+    Just $ TermFun sp Plus e (TermLit sp' (LitInteger (negate i)))
+  TermFun sp Minus (TermLit sp' (LitInteger i)) e ->
+    Just $ TermFun sp Plus (TermLit sp' (LitInteger (negate i))) e
+  TermFun sp Minus e (TermLit sp' (LitFloating i)) ->
+    Just $ TermFun sp Plus e (TermLit sp' (LitFloating (negate i)))
+  TermFun sp Minus (TermLit sp' (LitFloating i)) e ->
+    Just $ TermFun sp Plus (TermLit sp' (LitFloating (negate i))) e
   _ -> Nothing
 
 zeroLaws :: Reduction
 zeroLaws = \case
-  OpX _ OperatorPlus (LitX _ (LitInteger 0)) e -> Just e
-  OpX _ OperatorPlus e (LitX _ (LitInteger 0)) -> Just e
-  OpX _ OperatorPlus (LitX _ (LitFloating 0)) e -> Just e
-  OpX _ OperatorPlus e (LitX _ (LitFloating 0)) -> Just e
-  OpX _ OperatorTimes z@(LitX _ (LitInteger 0)) _ -> Just z
-  OpX _ OperatorTimes _ z@(LitX _ (LitInteger 0)) -> Just z
-  OpX _ OperatorTimes z@(LitX _ (LitFloating 0)) _ -> Just z
-  OpX _ OperatorTimes _ z@(LitX _ (LitFloating 0)) -> Just z
+  TermFun _ Plus (TermLit _ (LitInteger 0)) e -> Just e
+  TermFun _ Plus e (TermLit _ (LitInteger 0)) -> Just e
+  TermFun _ Plus (TermLit _ (LitFloating 0)) e -> Just e
+  TermFun _ Plus e (TermLit _ (LitFloating 0)) -> Just e
+  TermFun _ Times z@(TermLit _ (LitInteger 0)) _ -> Just z
+  TermFun _ Times _ z@(TermLit _ (LitInteger 0)) -> Just z
+  TermFun _ Times z@(TermLit _ (LitFloating 0)) _ -> Just z
+  TermFun _ Times _ z@(TermLit _ (LitFloating 0)) -> Just z
   _ -> Nothing
 
 oneLaws :: Reduction
 oneLaws = \case
-  OpX _ OperatorTimes (LitX _ (LitInteger 1)) e -> Just e
-  OpX _ OperatorTimes e (LitX _ (LitInteger 1)) -> Just e
-  OpX _ OperatorTimes (LitX _ (LitFloating 1)) e -> Just e
-  OpX _ OperatorTimes e (LitX _ (LitFloating 1)) -> Just e
-  OpX _ OperatorDiv e (LitX _ (LitInteger 1)) -> Just e
-  OpX _ OperatorDiv e (LitX _ (LitFloating 1)) -> Just e
+  TermFun _ Times (TermLit _ (LitInteger 1)) e -> Just e
+  TermFun _ Times e (TermLit _ (LitInteger 1)) -> Just e
+  TermFun _ Times (TermLit _ (LitFloating 1)) e -> Just e
+  TermFun _ Times e (TermLit _ (LitFloating 1)) -> Just e
+  TermFun _ Div e (TermLit _ (LitInteger 1)) -> Just e
+  TermFun _ Div e (TermLit _ (LitFloating 1)) -> Just e
   _ -> Nothing
 
 foldConstants :: Reduction
 foldConstants = \case
-  OpX spanOp op (LitX _ (LitInteger l)) (LitX _ (LitInteger r)) ->
-    LitX spanOp <$> case op of
-      OperatorPlus -> Just . LitInteger $ l + r
-      OperatorMinus -> Just . LitInteger $ l - r
-      OperatorTimes -> Just . LitInteger $ l * r
-      OperatorPow -> Nothing -- Grows too fast
-      OperatorDiv -> Nothing
-  OpX spanOp op (LitX _ (LitFloating l)) (LitX _ (LitFloating r)) ->
-    LitX spanOp <$> case op of
-      OperatorPlus -> Just . LitFloating $ l + r
-      OperatorMinus -> Just . LitFloating $ l - r
-      OperatorTimes -> Just . LitFloating $ l * r
-      OperatorPow -> Nothing
-      OperatorDiv -> Just . LitFloating $ l / r
+  TermFun spanOp fun (TermLit _ (LitInteger l)) (TermLit _ (LitInteger r)) ->
+    TermLit spanOp <$> case fun of
+      Plus -> Just . LitInteger $ l + r
+      Minus -> Just . LitInteger $ l - r
+      Times -> Just . LitInteger $ l * r
+      Pow -> Nothing -- Grows too fast
+      Div -> Nothing
+  TermFun spanOp fun (TermLit _ (LitFloating l)) (TermLit _ (LitFloating r)) ->
+    TermLit spanOp <$> case fun of
+      Plus -> Just . LitFloating $ l + r
+      Minus -> Just . LitFloating $ l - r
+      Times -> Just . LitFloating $ l * r
+      Pow -> Nothing
+      Div -> Just . LitFloating $ l / r
   -- (e + c) + c  ->  e + c
-  OpX sp op (OpX sp' op' e (LitX _ (LitInteger i'))) (LitX _ (LitInteger i))
-    | op == op' && op == OperatorPlus ->
-      Just $ OpX (sp' <> sp) OperatorPlus e $
-        LitX (sp' <> sp) (LitInteger (i + i'))
+  TermFun
+    sp
+    fun
+    (TermFun sp' fun' e (TermLit _ (LitInteger i')))
+    (TermLit _ (LitInteger i))
+      | fun == fun' && fun == Plus ->
+        Just $ TermFun (sp' <> sp) Plus e $
+          TermLit (sp' <> sp) (LitInteger (i + i'))
   -- (c + e) + c  ->  e + c
-  OpX sp op (OpX sp' op' (LitX _ (LitInteger i')) e) (LitX _ (LitInteger i))
-    | op == op' && op == OperatorPlus ->
-      Just $ OpX (sp' <> sp) OperatorPlus e $
-        LitX (sp' <> sp) (LitInteger (i + i'))
+  TermFun
+    sp
+    fun
+    (TermFun sp' fun' (TermLit _ (LitInteger i')) e)
+    (TermLit _ (LitInteger i))
+      | fun == fun' && fun == Plus ->
+        Just $ TermFun (sp' <> sp) Plus e $
+          TermLit (sp' <> sp) (LitInteger (i + i'))
   -- c + (e + c)  ->  e + c
-  OpX sp op (LitX _ (LitInteger i)) (OpX sp' op' e (LitX _ (LitInteger i')))
-    | op == op' && op == OperatorPlus ->
-      Just $ OpX (sp' <> sp) OperatorPlus e $
-        LitX (sp' <> sp) (LitInteger (i + i'))
+  TermFun
+    sp
+    fun
+    (TermLit _ (LitInteger i))
+    (TermFun sp' fun' e (TermLit _ (LitInteger i')))
+      | fun == fun' && fun == Plus ->
+        Just $ TermFun (sp' <> sp) Plus e $
+          TermLit (sp' <> sp) (LitInteger (i + i'))
   -- c + (c + e)  ->  e + c
-  OpX sp op (LitX _ (LitInteger i)) (OpX sp' op' (LitX _ (LitInteger i')) e)
-    | op == op' && op == OperatorPlus ->
-      Just $ OpX (sp' <> sp) OperatorPlus e $
-        LitX (sp' <> sp) (LitInteger (i + i'))
+  TermFun
+    sp
+    fun
+    (TermLit _ (LitInteger i))
+    (TermFun sp' fun' (TermLit _ (LitInteger i')) e)
+      | fun == fun' && fun == Plus ->
+        Just $ TermFun (sp' <> sp) Plus e $
+          TermLit (sp' <> sp) (LitInteger (i + i'))
   _ -> Nothing
-
-

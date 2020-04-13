@@ -25,33 +25,33 @@ data Associativity
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 -- | https://en.wikipedia.org/wiki/Operator_associativity
-assoc :: AST.Operator -> Associativity
+assoc :: AST.Fun -> Associativity
 assoc = \case
-  AST.OperatorPlus -> FullAssoc
-  AST.OperatorMinus -> LeftAssoc
-  AST.OperatorTimes -> FullAssoc
-  AST.OperatorDiv -> LeftAssoc
-  AST.OperatorPow -> RightAssoc
+  AST.Plus -> FullAssoc
+  AST.Minus -> LeftAssoc
+  AST.Times -> FullAssoc
+  AST.Div -> LeftAssoc
+  AST.Pow -> RightAssoc
 
-isFullyAssociative :: AST.Operator -> Bool
+isFullyAssociative :: AST.Fun -> Bool
 isFullyAssociative = (== FullAssoc) . assoc
 
-isLeftAssociative :: AST.Operator -> Bool
+isLeftAssociative :: AST.Fun -> Bool
 isLeftAssociative = (== LeftAssoc) . assoc
 
-isRightAssociative :: AST.Operator -> Bool
+isRightAssociative :: AST.Fun -> Bool
 isRightAssociative = (== RightAssoc) . assoc
 
-associatesLeft :: AST.Operator -> Bool
+associatesLeft :: AST.Fun -> Bool
 associatesLeft = liftA2 (||) isLeftAssociative isFullyAssociative
 
-associatesRight :: AST.Operator -> Bool
+associatesRight :: AST.Fun -> Bool
 associatesRight = liftA2 (||) isRightAssociative isFullyAssociative
 
-prec :: AST.Operator -> Precedence
+prec :: AST.Fun -> Precedence
 prec = \case
-  AST.OperatorPlus -> 1
-  AST.OperatorMinus -> 1
-  AST.OperatorTimes -> 2
-  AST.OperatorDiv -> 2
-  AST.OperatorPow -> 3
+  AST.Plus -> 1
+  AST.Minus -> 1
+  AST.Times -> 2
+  AST.Div -> 2
+  AST.Pow -> 3

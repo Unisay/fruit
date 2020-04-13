@@ -30,6 +30,9 @@ data Tok
   | Div
   | Pow
   | Equal
+  | Lambda
+  | LeftArrow
+  | RightArrow
   | Space Space
   | EOF
   deriving (Eq, Show)

@@ -26,15 +26,29 @@ packages:
   original:
     hackage: haskeline-0.8.0.0
 - completed:
+    hackage: RepLib-0.5.4.1@sha256:f1d0765fbdc55c0905b3b70f1953a440cb8d04b65b3ccd6f067ee0f082f6fa0d,1953
+    pantry-tree:
+      size: 995
+      sha256: a343349797e41e579eedab5d01fe01cbbb3f7963eb5e2c2c58ca6bac5a34c9ce
+  original:
+    hackage: RepLib-0.5.4.1@sha256:f1d0765fbdc55c0905b3b70f1953a440cb8d04b65b3ccd6f067ee0f082f6fa0d,1953
+- completed:
     hackage: repline-0.3.0.0@sha256:505265acd1e8c53de9eb8aebe096e6f734316aa4e7a3434e1a49e914cec78cdd,2101
     pantry-tree:
       size: 501
       sha256: 8f2256094d0bf3b0bd51ac05a15cdb4ffe25d5ea30740ea26a3d5814c4d4e07e
   original:
     hackage: repline-0.3.0.0
+- completed:
+    hackage: unbound-0.5.1.1@sha256:13bc46f324b63061db1189e45c00e0d332fa0371c95077c4e474d3b94b7dd01d,3248
+    pantry-tree:
+      size: 2485
+      sha256: 033d22514d9e56ea66056456d84a410ccf7f552deb7ee4cda69af111b234819d
+  original:
+    hackage: unbound-0.5.1.1@sha256:13bc46f324b63061db1189e45c00e0d332fa0371c95077c4e474d3b94b7dd01d,3248
 snapshots:
 - completed:
-    size: 491389
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/7.yaml
-    sha256: 92ab6303fe20ec928461c82ce0980b4d17c06f4e66205a2967e476474f686c17
-  original: lts-15.7
+    size: 492015
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/8.yaml
+    sha256: 926bc3d70249dd0ba05277ff00943c0addb35b627cb641752669e7cf771310d0
+  original: lts-15.8

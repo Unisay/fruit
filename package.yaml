@@ -56,6 +56,7 @@ executables:
     ghc-options:
       - -threaded
     dependencies:
+      - containers
       - exceptions
       - fruit
       - mtl
@@ -77,11 +78,15 @@ library:
     - deepseq
     - ghc-prim
     - pathtype
+    - pretty-show
     - prettyprinter
     - prettyprinter-ansi-terminal
     - text
-    - utf8-string
+    - transformers
+    - mtl
+    - unbound
     - uniplate
+    - utf8-string
 
 tests:
   spec:
@@ -92,6 +97,7 @@ tests:
       - fruit
       - filepath
       - pretty-show
+      - prettyprinter
       - hedgehog
       - hspec
       - hspec-expectations-pretty-diff

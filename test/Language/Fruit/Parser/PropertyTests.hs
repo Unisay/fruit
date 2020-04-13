@@ -6,36 +6,38 @@
 
 module Language.Fruit.Parser.PropertyTests where
 
-import Data.Generics.Uniplate (rewrite)
-import qualified Generators.Language.Fruit.AST.Parsed as Gen
+import qualified Data.Text.Prettyprint.Doc as Doc
+import Data.Text.Prettyprint.Doc.Render.Text (renderStrict)
+import qualified Generators as Gen
+import qualified Generators.Printed as GenPrinted
 import Hedgehog
 import qualified Language.Fruit.Data.InputStream as InputStream
-import qualified Language.Fruit.Optimizer as Opt
 import qualified Language.Fruit.Parser as Parser
-import qualified Language.Fruit.Pretty.Printer as Printer
 import qualified Language.Fruit.Syntax.AST as AST
-import Language.Fruit.Syntax.Precedence (associatesLeft, isRightAssociative, prec)
+import qualified Language.Fruit.Syntax.Printer as Printer
 
 group :: Group
 group = $$(discover)
 
 prop_PrintParseRoundtrip :: Property
 prop_PrintParseRoundtrip = property do
-  expr <- forAll Gen.exp
-  let expr' = reassoc . AST.toVanilla . Opt.optimize $ expr
-  annotateShow expr'
-  tripping
-    expr'
-    (toString . Printer.renderExpr)
-    ( fmap AST.toVanilla
-        . Parser.parse @AST.ExpParsed
+  term <-
+    renderStrict . Doc.layoutPretty Doc.defaultLayoutOptions
+      <$> forAll GenPrinted.term
+  annotateShow term
+  parsed <- parse term
+  term === Printer.renderTerm parsed
+  where
+    parse =
+      evalEither
+        . Parser.parse @AST.Term
         . InputStream.fromString
-    )
+        . toString
 
 prop_BalancedParens :: Property
 prop_BalancedParens = property do
-  expr <- forAll Gen.exp
-  let printed = toString (Printer.renderExpr expr)
+  term <- forAll Gen.term
+  let printed = toString (Printer.renderTerm term)
   annotateShow printed
   isBalanced printed === True
   where
@@ -49,15 +51,3 @@ prop_BalancedParens = property do
         go (_ : ss) n = go ss n
         go "" 0 = True
         go "" _ = False
-
-reassoc :: AST.ExpVanilla -> AST.ExpVanilla
-reassoc = rewrite \case
-  -- ∀ left-assoc ops: e1 `op` (e2 `op` e3) ---> (e1 `op` e2) `op` e3
-  AST.OpVanilla op1 e1 (AST.OpVanilla op2 e2 e3)
-    | prec op1 == prec op2 && associatesLeft op1 && associatesLeft op2 ->
-      Just $ AST.OpVanilla op1 (AST.OpVanilla op2 e1 e2) e3
-  -- ∀ right-assoc ops: (e1 `op` e2) `op` e3 ---> e1 `op` (e2 `op` e3)
-  AST.OpVanilla op1 (AST.OpVanilla op2 e1 e2) e3
-    | prec op1 == prec op2 && isRightAssociative op1 && isRightAssociative op2 ->
-      Just $ AST.OpVanilla op1 e1 (AST.OpVanilla op2 e2 e3)
-  _ -> Nothing

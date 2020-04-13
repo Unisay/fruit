@@ -43,7 +43,8 @@ $octit     = 0-7
 $hexit     = [$decdigit A-F a-f]
 $uniidchar = \x07 -- Trick Alex into handling Unicode. See [Unicode in Alex].
 $idchar    = [$lower $upper $digit $uniidchar \']
-
+@left_arr  = \<\-
+@right_arr = \-\>
 @commentStart = \{ \-
 @commentEnd = \- \}
 @lowerId = $lower $idchar*          
@@ -92,6 +93,12 @@ fruit :-
 <0> "/" { token Tok.Div }
 <0> "^" { token Tok.Pow }
 <0> "=" { token Tok.Equal }
+<0> "λ" { token Tok.Lambda }
+<0> "\" { token Tok.Lambda }
+
+-- Arrows
+<0> @left_arr { token Tok.LeftArrow } 
+<0> @left_arr { token Tok.LeftArrow } 
 
 -- Literals
 <0> @signed @decimal { tokenInteger }
