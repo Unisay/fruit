@@ -78,6 +78,6 @@ printFun :: Fun -> Doc Ann
 printFun = annotate AnnFun . \case
   Plus -> pretty '+'
   Minus -> pretty '-'
-  Times -> pretty '*'
+  Mul -> pretty '*'
   Div -> slash
   Pow -> pretty '^'

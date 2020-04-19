@@ -44,4 +44,4 @@ plus :: Term -> Term -> Term
 plus = TermFun mempty Plus
 
 times :: Term -> Term -> Term
-times = TermFun mempty Times
+times = TermFun mempty Mul

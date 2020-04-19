@@ -1,14 +1,17 @@
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Language.Fruit.Syntax.AST where
 
-import Data.Generics.Uniplate (Uniplate (..))
-import Language.Fruit.Data.Ident (Ident)
+import Data.Generics.Uniplate (Uniplate (..), para)
+import qualified Language.Fruit.Core as Core
+import Language.Fruit.Data.Ident (Ident (..))
 import Language.Fruit.Data.Span (Span, Spanned)
 
 -- | This is the fundamental unit of parsing -
@@ -69,7 +72,42 @@ newtype Var = Var Ident
 data Fun
   = Plus
   | Minus
-  | Times
+  | Mul
   | Div
   | Pow
   deriving (Eq, Ord, Show)
+
+translateToCore :: Term -> Core.Term
+translateToCore = para \case
+  TermApp {} ->
+    \case
+      [t1, t2] -> Core.App t1 t2
+      _ -> err "Core.TermApp"
+  TermLam _ (Var Ident {name}) _ ->
+    \case
+      [t] -> Core.mkLam name t
+      _ -> err "Core.TermLam"
+  TermLit _ lit ->
+    const case lit of
+      LitInteger i -> Core.LitInteger i
+      LitFloating f -> Core.LitFloating f
+  TermVar _ (Var Ident {name}) ->
+    const (Core.mkVar name)
+  TermLet _ (Var Ident {name}) _ _ ->
+    \case
+      [t1, t2] -> Core.mkLet name t1 t2
+      _ -> err "Core.TermLam"
+  TermFun _ fun _ _ ->
+    foldl' Core.App . Core.mkVar $ case fun of
+      Plus -> "plus"
+      Minus -> "minus"
+      Mul -> "mul"
+      Div -> "div"
+      Pow -> "pow"
+  TermScope {} ->
+    \case
+      [t] -> t
+      _ -> err "AST.TermScope"
+  where
+    err :: Text -> a
+    err = error . ("Unexpected number of sub-terms: " <>)

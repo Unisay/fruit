@@ -1,9 +1,9 @@
 module ReplM where
 
+import qualified JS
 import System.Console.Repline (HaskelineT, ReplOpts, evalReplOpts)
-import Types
 
-type Repl = HaskelineT (StateT Env IO)
+type Repl = HaskelineT (StateT JS.Env IO)
 
-runReplM :: ReplOpts (StateT Env IO) -> IO ()
+runReplM :: ReplOpts (StateT JS.Env IO) -> IO ()
 runReplM opts = evalStateT (evalReplOpts opts) mempty

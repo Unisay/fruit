@@ -53,4 +53,4 @@ litFloating =
     <$> Gen.double (Range.exponentialFloatFrom 0 (-10000) 10000)
 
 fun :: Gen AST.Fun
-fun = Gen.element [AST.Plus, AST.Minus, AST.Times, AST.Div, AST.Pow]
+fun = Gen.element [AST.Plus, AST.Minus, AST.Mul, AST.Div, AST.Pow]

@@ -1,72 +1,81 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE NamedFieldPuns #-}
 
 module Language.Fruit.Js.Printer where
 
 import Data.Generics.Uniplate (para)
+import qualified Data.Map as Map
 import Data.Text.Prettyprint.Doc
   ( (<+>),
     Doc,
+    align,
     annotate,
-    cat,
+    braces,
     concatWith,
     defaultLayoutOptions,
-    equals,
-    equals,
     hsep,
     layoutPretty,
     parens,
     pretty,
+    sep,
     slash,
     space,
     surround,
+    tupled,
     unsafeViaShow,
   )
 import qualified Data.Text.Prettyprint.Doc.Render.Text as Doc
-import Language.Fruit.Data.Ident (Ident (..))
-import Language.Fruit.Syntax.AST
-
-data Js
-  = JsOperator
-  | JsLiteral
-  | JsIdentifier
-  | JsKeyword
-  deriving (Eq, Show)
+import Language.Fruit.Js.Syntax
 
 renderTerm :: Term -> Text
 renderTerm = Doc.renderStrict . layoutPretty defaultLayoutOptions . printTerm
 
-printTerm :: Term -> Doc Js
+printTerm :: Term -> Doc Lexeme
 printTerm = para \case
-  TermApp {} -> cat . fmap parens
-  TermLam _ var _ -> mappend (printVar var) . mappend "=>" . hsep
-  TermScope {} -> parens . hsep
-  TermLit _ literal -> const (printLit literal)
-  TermVar _ var -> const (printVar var)
-  TermLet _ var _ _ ->
-    \xs ->
-      annotate JsKeyword "let"
-        <+> printVar var
-        <+> equals
-        <+> concatWith
-          (surround (surround (annotate JsKeyword "in") space space))
-          xs
-  TermFun _ fun _ _ ->
-    concatWith (surround (surround (printFun fun) space space))
+  TermVar var ->
+    const (printVar var)
+  TermNumBigInt num ->
+    const (unsafeViaShow num <> "n")
+  TermNumInt num ->
+    const (unsafeViaShow num)
+  TermNumFloating num ->
+    const (unsafeViaShow num)
+  TermOperator op _ _ ->
+    concatWith (surround (surround (printOperator op) space space))
+  TermLambda pat _ ->
+    hsep . (printPat pat :) . ("=>" :)
+  TermFunction name args _ ->
+    hsep
+      . ("function" :)
+      . (printVar name :)
+      . (parens (printArgs args) :)
+      . pure
+      . braces
+      . hsep
+  TermCall {} ->
+    \case
+      f : args -> f <> tupled args
+      [] -> mempty
+  TermLet binds | parts <- zip (printVar <$> Map.keys binds) ->
+    \terms ->
+      let bindDocs = sep [k <+> "=" <+> v <> ";" | (k, v) <- parts terms]
+       in "let" <+> align bindDocs
+  TermBlock {} ->
+    braces . hsep
 
-printLit :: Lit -> Doc Js
-printLit = annotate JsLiteral . \case
-  LitInteger i -> bool identity parens (i < 0) . unsafeViaShow $ i
-  LitFloating d -> unsafeViaShow d
+printPat :: Pattern -> Doc Lexeme
+printPat (PatternVar var) = printVar var
 
-printVar :: Var -> Doc Js
-printVar = annotate JsIdentifier . \case Var Ident {name} -> pretty name
+printVar :: Var -> Doc Lexeme
+printVar = annotate LexemeIdentifier . \case Var name -> pretty name
 
-printFun :: Fun -> Doc Js
-printFun = annotate JsOperator . \case
-  Plus -> pretty '+'
-  Minus -> pretty '-'
-  Times -> pretty '*'
+printArgs :: [Var] -> Doc Lexeme
+printArgs = parens . hsep . fmap printVar
+
+printOperator :: Operator -> Doc Lexeme
+printOperator = annotate LexemeOperator . \case
+  Plus -> "+"
+  Minus -> "-"
+  Mul -> "*"
   Div -> slash
-  Pow -> pretty '^'
+  Pow -> "**"

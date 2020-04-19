@@ -50,6 +50,8 @@ commands :: [(String, [String] -> Repl ())]
 commands =
   [ ("help", help),
     ("parse", Command.parse),
+    ("def", Command.define),
+    ("clear", Command.clear),
     ("jsf", Command.javaScriptFormat),
     ("jse", Command.javaScriptEval),
     ("format", Command.format)
@@ -65,6 +67,10 @@ help _ =
       \ - parses <expression>\n\
       \:format (or just :f) followed by <expression>\
       \ - formats <expression>\n\
+      \:def    (or just :d) followed by <expression>\
+      \ - parses <expression> and saves it in the session\n\
+      \:clear  [<expression>]\
+      \ - clears (named expression | all expressions) saved in the session\n\
       \:jsf                 followed by <expression>\
       \ - compiles <expression> to JavaScript and prints it\n\
       \:jse                 followed by <expression>\

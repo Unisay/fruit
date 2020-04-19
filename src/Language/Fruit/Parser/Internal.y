@@ -71,33 +71,37 @@ Import :: { AST.Import }
   : UpperQName List(LowerId) { AST.Import $1 $2 }
 
 Term :: { AST.Term }
-  : Term Atom { AST.TermApp $1 $2 } 
-  | Atom { $1 }
-
-Atom :: { AST.Term }
-  : 'λ' Variable '.' Atom
+  : Factor Term 
+    { AST.TermApp $1 $2 } 
+  | let Variable '=' Term in Term 
+    { AST.TermLet ($1 # $3) (unspan $2) $4 $6 }
+  | 'λ' Variable '.' Term
     { AST.TermLam ($1 # $3) (unspan $2) $4 }
-  | Atom '+' Atom 
+  | Term1 { $1 }
+
+Term1 :: { AST.Term }
+  : Factor '+' Term
     { AST.TermFun (spanOf $2) AST.Plus $1 $3 }
-  | Atom '-' Atom 
+  | Factor '-' Term
     { AST.TermFun (spanOf $2) AST.Minus $1 $3 }
-  | Atom '*' Atom
-    { AST.TermFun (spanOf $2) AST.Times $1 $3 }
-  | Atom '/' Atom
+  | Factor '*' Term
+    { AST.TermFun (spanOf $2) AST.Mul $1 $3 }
+  | Factor '/' Term
     { AST.TermFun (spanOf $2) AST.Div $1 $3 }
-  | Atom '^' Atom
+  | Factor '^' Term
     { AST.TermFun (spanOf $2) AST.Pow $1 $3 }
-  | Literal 
+  | Factor
+    { $1 }
+
+Factor :: { AST.Term }
+  : Literal 
     { $1 }
   | Variable
     { AST.TermVar (spanOf $1) (unspan $1) }
-  | let Variable '=' Term in Atom
-    { AST.TermLet ($1 # $3) (unspan $2) $4 $6 }
   | '(' Term ')' 
     { AST.TermScope ($1 # $3) $2 }
   | indent Term dedent 
     { AST.TermScope ($1 # $3) $2 }
-
 
 Literal :: { AST.Term }
   : integer 
@@ -163,27 +167,7 @@ many(p) :: { [ p ] }
   : some(p)               { toList $1 }
   | {- empty -}           { [] }
 
--- | One or more occurences of 'p', seperated by 'sep'
-sep_by1(p,sep) :: { Reversed NonEmpty p }
-  : sep_by1(p,sep) sep p  { let Reversed xs = $1 in Reversed (NEL.cons $3 xs) }
-  | p                     { [$1] }
 
--- | Zero or more occurrences of 'p', separated by 'sep'
-sep_by(p,sep) :: { [ p ] }
-  : sep_by1(p,sep)        { toList $1 }
-  | {- empty -}           { [] }
-
--- | One or more occurrences of 'p', seperated by 'sep', 
--- optionally ending in 'sep'
-sep_by1T(p,sep) :: { Reversed NonEmpty p }
-  : sep_by1(p,sep) sep    { $1 }
-  | sep_by1(p,sep)        { $1 }
-
--- | Zero or more occurences of 'p', seperated by 'sep', 
--- optionally ending in 'sep' (only if there is at least one 'p')
-sep_byT(p,sep) :: { [ p ] }
-  : sep_by1T(p,sep)       { toList $1 }
-  | {- empty -}           { [] }
 
 {
 
