@@ -5,6 +5,7 @@
 module Language.Fruit.Syntax.Printer
   ( renderTerm,
     printTerm,
+    printDefinition,
     Ann (..),
   )
 where
@@ -19,6 +20,7 @@ import Data.Text.Prettyprint.Doc
     dot,
     enclose,
     equals,
+    hcat,
     hsep,
     parens,
     pretty,
@@ -45,6 +47,14 @@ renderTerm =
     . Doc.layoutPretty Doc.defaultLayoutOptions
     . Doc.unAnnotate
     . printTerm
+
+printDefinition :: Definition -> Doc Ann
+printDefinition (Definition _ var term) =
+  hcat
+    [ printVar var,
+      surround "=" space space,
+      printTerm term
+    ]
 
 printTerm :: Term -> Doc Ann
 printTerm = para \case

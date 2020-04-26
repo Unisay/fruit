@@ -1,5 +1,6 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Command where
@@ -14,6 +15,7 @@ import Error
 import qualified JS
 import qualified Language.Fruit.Core as Core
 import qualified Language.Fruit.Data.InputStream as IS
+import Language.Fruit.Data.Span (spanOf)
 import qualified Language.Fruit.Parser as Parser
 import qualified Language.Fruit.Syntax.AST as AST
 import qualified Language.Fruit.Syntax.Printer as PP
@@ -21,64 +23,63 @@ import ReplM
 import System.Console.Repline
 import Text.Show.Pretty (ppShow)
 
-empty :: [String] -> Repl ()
-empty args = dontCrash do
-  term <- parseTerm args
-  formatTerm term
-  printTerm term
-
-define :: [String] -> Repl ()
-define (var : args) = dontCrash do
-  term <- parseTerm args
-  modify $ Map.insert (JS.Var $ toText var) (astToJsCode term)
-define _ = putTextLn "Nothing defined"
+definition :: [String] -> Repl ()
+definition args = dontCrash do
+  defn@(AST.Definition _ var _) <- parseDefinition args
+  unless (var == AST.Var "$$") do
+    modify $ Map.insert (JS.Var $ toText var) (astToJsCode defn)
+  formatDefinition defn
+  printDefinition defn
 
 clear :: [String] -> Repl ()
 clear [var] = modify $ Map.delete (JS.Var $ toText var)
 clear _ = put mempty
 
 parse :: [String] -> Repl ()
-parse args = dontCrash do
-  term <- parseTerm args
-  printTerm term
+parse args = dontCrash $ parseDefinition args >>= printDefinition
 
-printTerm :: AST.Term -> Repl ()
-printTerm term = do
-  putTextLn "═════ No optimizations: ═════"
-  putStrLn $ ppShow term
-
--- putTextLn "═════ After optimizations: ═════"
--- putStrLn . ppShow $ Opt.optimize term
+printDefinition :: AST.Definition -> Repl ()
+printDefinition defn = do
+  putTextLn "═════ Unoptimized definition: ═════"
+  putStrLn $ ppShow defn
 
 format :: [String] -> Repl ()
-format args = dontCrash do
-  term <- parseTerm args
-  formatTerm term
+format args = dontCrash $ parseDefinition args >>= formatDefinition
 
-formatTerm :: AST.Term -> Repl ()
-formatTerm = putTextLn . renderAnsi
+formatDefinition :: AST.Definition -> Repl ()
+formatDefinition = putTextLn . renderDefinitionAnsi
 
-parseTerm :: [String] -> Repl AST.Term
-parseTerm args = do
-  let input = IS.fromString . String.unwords $ args
-  either (throwM . ErrParser) pure $ Parser.parse @AST.Term input
+parseDefinition :: [String] -> Repl AST.Definition
+parseDefinition args = do
+  let source = IS.fromString . String.unwords $ args
+  case Parser.parse @AST.Term source of
+    Right term ->
+      pure $ AST.Definition (spanOf term) pseudoVar term
+    Left _ ->
+      case Parser.parse @AST.Definition source of
+        Left definitionFail ->
+          throwM (ErrParser definitionFail)
+        Right defn ->
+          pure defn
 
-astToCore :: AST.Term -> Core.Term
-astToCore = Core.optimize . AST.translateToCore
+astToCore :: AST.Definition -> AST.Term -> Core.Term
+astToCore defn = Core.optimize <$> AST.translateDefinitionToCore defn
 
-astToJsCode :: AST.Term -> JS.Code
-astToJsCode = renderJs . JS.optimize . JS.translateFromCore . astToCore
+astToJsCode :: AST.Definition -> JS.Code
+astToJsCode defn =
+  let core = astToCore defn pseudoTerm
+   in renderJs . JS.optimize . JS.translateFromCore $ core
 
 renderJs :: JS.Term -> JS.Code
 renderJs = JS.Code . JS.renderTerm
 
-javaScriptFormat :: [String] -> Repl ()
-javaScriptFormat args = do
-  ast <- parseTerm args
+formatAsJavaScript :: [String] -> Repl ()
+formatAsJavaScript args = do
+  defn <- parseDefinition args
   putTextLn "═════ Fruit syntax ═════"
-  putStrLn $ ppShow ast
+  putStrLn $ ppShow defn
   putTextLn "═════ Fruit core ═════"
-  let term = astToCore ast
+  let term = astToCore defn pseudoTerm
   putStrLn $ ppShow term
   putTextLn "═════ Unoptimized JS syntax ═════"
   let jsTerm = JS.translateFromCore term
@@ -90,20 +91,28 @@ javaScriptFormat args = do
   let jsCode = renderJs jsTerm'
   putTextLn $ toText jsCode
 
-javaScriptEval :: [String] -> Repl ()
-javaScriptEval args = do
-  term <- parseTerm args
+evalAsJavaScript :: [String] -> Repl ()
+evalAsJavaScript args = dontCrash do
+  defn <- parseDefinition args
   env <- get
-  evaluated <- JS.evalTerm env (astToJsCode term)
-  putTextLn "═════ JS result ═════"
+  evaluated <- JS.evalTerm env (astToJsCode defn)
+  putTextLn "═════ JS code ═════"
   putTextLn $ toText evaluated
 
-renderAnsi :: AST.Term -> Text
-renderAnsi =
+evalJavaScript :: [String] -> Repl ()
+evalJavaScript args = dontCrash do
+  let code = foldMap toText (intersperse " " args)
+  putTextLn "═════ JS code ═════"
+  putTextLn code
+  putTextLn "═════ JS output ═════"
+  putTextLn . toText =<< JS.evalRawText code
+
+renderDefinitionAnsi :: AST.Definition -> Text
+renderDefinitionAnsi =
   Ansi.renderStrict
     . Doc.layoutPretty Doc.defaultLayoutOptions
     . Doc.reAnnotate colorScheme
-    . PP.printTerm
+    . PP.printDefinition
 
 colorScheme :: PP.Ann -> AnsiStyle
 colorScheme = \case
@@ -111,3 +120,9 @@ colorScheme = \case
   PP.AnnLiteral -> Ansi.color Red
   PP.AnnIdentifier -> Ansi.color Magenta
   PP.AnnKeyword -> Ansi.color Green
+
+pseudoTerm :: AST.Term
+pseudoTerm = AST.TermVar mempty pseudoVar
+
+pseudoVar :: AST.Var
+pseudoVar = AST.Var "$$"

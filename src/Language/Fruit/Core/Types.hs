@@ -12,6 +12,9 @@ import Unbound.LocallyNameless
 
 type Nam = Name Term
 
+instance IsString Nam where
+  fromString = string2Name
+
 data Term
   = LitInteger Integer
   | LitFloating Double

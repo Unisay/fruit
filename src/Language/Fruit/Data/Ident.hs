@@ -30,6 +30,9 @@ instance Show Ident where
 instance IsString Ident where
   fromString = mkIdent
 
+instance ToText Ident where
+  toText = fromString . name
+
 -- | Uses 'hash' to short-circuit
 instance Eq Ident where
   i1 == i2 = hash i1 == hash i2 && name i1 == name i2

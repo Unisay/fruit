@@ -43,7 +43,7 @@ printTerm = para \case
   TermOperator op _ _ ->
     concatWith (surround (surround (printOperator op) space space))
   TermLambda pat _ ->
-    hsep . (printPat pat :) . ("=>" :)
+    parens . hsep . (printPat pat :) . ("=>" :)
   TermFunction name args _ ->
     hsep
       . ("function" :)
@@ -67,7 +67,8 @@ printPat :: Pattern -> Doc Lexeme
 printPat (PatternVar var) = printVar var
 
 printVar :: Var -> Doc Lexeme
-printVar = annotate LexemeIdentifier . \case Var name -> pretty name
+printVar = annotate LexemeIdentifier . \case
+  Var name -> pretty name
 
 printArgs :: [Var] -> Doc Lexeme
 printArgs = parens . hsep . fmap printVar

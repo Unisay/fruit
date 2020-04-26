@@ -18,7 +18,12 @@ translateFromCore = U.runFreshM . para \case
   Core.LitFloating d ->
     const . pure . JS.TermNumFloating $ d
   Core.Var nam ->
-    const . pure . JS.TermVar . name2var $ nam
+    let var =
+          if nam == "$$"
+            then JS.Var "undefined"
+            else name2var nam
+     in -- TODO: replace invalid identifiers with undefined? Emit a warning?
+        const . pure . JS.TermVar $ var
   Core.App {} -> \case
     [a, b] -> JS.TermCall <$> a <*> (pure <$> b)
     _ -> errSubTerms 2 "Core.App"

@@ -17,7 +17,7 @@ main = withUtf8 do
   runReplM
     ReplOpts
       { banner = pure "Fruit » ",
-        command = Command.empty . Str.words,
+        command = Command.definition . Str.words,
         options = commands,
         prefix = Just ':',
         tabComplete = Word0 completer,
@@ -50,10 +50,10 @@ commands :: [(String, [String] -> Repl ())]
 commands =
   [ ("help", help),
     ("parse", Command.parse),
-    ("def", Command.define),
     ("clear", Command.clear),
-    ("jsf", Command.javaScriptFormat),
-    ("jse", Command.javaScriptEval),
+    ("jsf", Command.formatAsJavaScript),
+    ("jse", Command.evalAsJavaScript),
+    ("jsr", Command.evalJavaScript),
     ("format", Command.format)
   ]
 
@@ -67,12 +67,12 @@ help _ =
       \ - parses <expression>\n\
       \:format (or just :f) followed by <expression>\
       \ - formats <expression>\n\
-      \:def    (or just :d) followed by <expression>\
-      \ - parses <expression> and saves it in the session\n\
       \:clear  [<expression>]\
       \ - clears (named expression | all expressions) saved in the session\n\
       \:jsf                 followed by <expression>\
       \ - compiles <expression> to JavaScript and prints it\n\
       \:jse                 followed by <expression>\
       \ - compiles <expression> to JavaScript and evaluates it\n\
+      \:jsr                 followed by <JavaScript code>\
+      \ - evaluates raw JavaScript\n\
       \:help   (or just :h) - prints this help\n"

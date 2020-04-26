@@ -12,7 +12,8 @@ module Language.Fruit.Syntax.AST where
 import Data.Generics.Uniplate (Uniplate (..), para)
 import qualified Language.Fruit.Core as Core
 import Language.Fruit.Data.Ident (Ident (..))
-import Language.Fruit.Data.Span (Span, Spanned)
+import Language.Fruit.Data.Span ((#), Located (..), Span, Spanned)
+import qualified Unbound.LocallyNameless as UB
 
 -- | This is the fundamental unit of parsing -
 -- it represents the contents of one source file.
@@ -34,6 +35,10 @@ data Import
   = Import QualifiedName [Spanned Ident]
   deriving (Eq, Ord, Show)
 
+data Definition
+  = Definition Span Var Term
+  deriving (Eq, Show, Generic)
+
 data Term
   = TermApp Term Term
   | TermLam Span Var Term
@@ -43,6 +48,16 @@ data Term
   | TermFun Span Fun Term Term
   | TermScope Span Term
   deriving (Eq, Show, Generic)
+
+instance Located Term where
+  spanOf = \case
+    TermApp a b -> a # b
+    TermLam sp _ _ -> sp
+    TermLit sp _ -> sp
+    TermVar sp _ -> sp
+    TermLet sp _ _ _ -> sp
+    TermFun sp _ _ _ -> sp
+    TermScope sp _ -> sp
 
 instance Uniplate Term where
   uniplate = \case
@@ -66,7 +81,7 @@ data Lit
   deriving stock (Eq, Ord, Show)
 
 newtype Var = Var Ident
-  deriving newtype (Eq, Ord)
+  deriving newtype (Eq, Ord, ToText, IsString)
   deriving stock (Show)
 
 data Fun
@@ -77,8 +92,14 @@ data Fun
   | Pow
   deriving (Eq, Ord, Show)
 
-translateToCore :: Term -> Core.Term
-translateToCore = para \case
+translateDefinitionToCore :: Definition -> Term -> Core.Term
+translateDefinitionToCore (Definition _ (Var Ident {name}) term) =
+  Core.Let (translateTermToCore term)
+    . UB.bind (UB.string2Name (toString name))
+    . translateTermToCore
+
+translateTermToCore :: Term -> Core.Term
+translateTermToCore = para \case
   TermApp {} ->
     \case
       [t1, t2] -> Core.App t1 t2

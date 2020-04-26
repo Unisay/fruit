@@ -1,17 +1,14 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Language.Fruit.Core
-  ( module Language.Fruit.Core.Types,
+  ( module Reexport,
     eval,
-    optimize,
   )
 where
 
-import Language.Fruit.Core.Types
+import Language.Fruit.Core.Optimizer as Reexport
+import Language.Fruit.Core.Types as Reexport
 import Unbound.LocallyNameless (FreshM, runFreshM, subst, unbind)
-
-optimize :: Term -> Term
-optimize = identity
 
 eval :: Term -> Term
 eval x = runFreshM (tc step x)

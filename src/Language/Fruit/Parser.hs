@@ -92,3 +92,6 @@ instance Parse AST.SourceFile where
 
 instance Parse AST.Term where
   parser = parseTerm
+
+instance Parse AST.Definition where
+  parser = parseDefinition

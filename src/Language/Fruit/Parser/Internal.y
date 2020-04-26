@@ -17,6 +17,7 @@ import Data.List.NonEmpty (NonEmpty(..))
 }
 
 %name parseModule
+%name parseDefinition Definition
 %name parseTerm Term
 %error { parseError }
 %tokentype { Spanned Tok }
@@ -70,6 +71,11 @@ Imports :: { [AST.Import] }
 Import :: { AST.Import }
   : UpperQName List(LowerId) { AST.Import $1 $2 }
 
+
+Definition :: { AST.Definition }
+  : Variable '=' Term
+    { AST.Definition ($1 # $3) (unspan $1) $3 }
+
 Term :: { AST.Term }
   : Factor Term 
     { AST.TermApp $1 $2 } 
@@ -81,15 +87,15 @@ Term :: { AST.Term }
 
 Term1 :: { AST.Term }
   : Factor '+' Term
-    { AST.TermFun (spanOf $2) AST.Plus $1 $3 }
+    { AST.TermFun ($1 # $3) AST.Plus $1 $3 }
   | Factor '-' Term
-    { AST.TermFun (spanOf $2) AST.Minus $1 $3 }
+    { AST.TermFun ($1 # $3) AST.Minus $1 $3 }
   | Factor '*' Term
-    { AST.TermFun (spanOf $2) AST.Mul $1 $3 }
+    { AST.TermFun ($1 # $3) AST.Mul $1 $3 }
   | Factor '/' Term
-    { AST.TermFun (spanOf $2) AST.Div $1 $3 }
+    { AST.TermFun ($1 # $3) AST.Div $1 $3 }
   | Factor '^' Term
-    { AST.TermFun (spanOf $2) AST.Pow $1 $3 }
+    { AST.TermFun ($1 # $3) AST.Pow $1 $3 }
   | Factor
     { $1 }
 

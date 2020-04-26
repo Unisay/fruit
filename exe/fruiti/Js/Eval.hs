@@ -30,14 +30,17 @@ builtInEnv =
 evalTerm :: MonadIO m => Env -> Code -> m Result
 evalTerm env jsCode = do
   let code = reverse $ toText jsCode : formatEnv (Map.union builtInEnv env)
+      unJsLines = Text.intercalate ";\n"
+      js = unJsLines code
   putTextLn "═════ JS code ═════"
-  putTextLn . unJsLines $ code
-  (out, _) <-
-    readProcess_ . shell $
-      "node -p '" <> toString (unJsLines code) <> "'"
-  return . Result . Text.stripEnd . decodeUtf8 $ out
+  putTextLn js
+  evalRawText js
   where
-    unJsLines = Text.intercalate ";\n"
     formatEnv :: Env -> [Text]
     formatEnv = Map.foldMapWithKey \var code ->
       ["const " <> toText var <> " = " <> toText code]
+
+evalRawText :: MonadIO m => Text -> m Result
+evalRawText code = do
+  (out, _) <- readProcess_ . shell $ "node -p '" <> toString code <> "'"
+  return . Result . Text.stripEnd . decodeUtf8 $ out
