@@ -26,6 +26,10 @@ tokenInteger :: AlexAction
 tokenInteger span _ str =
   pure . Just $ Spanned (Tok.Integer $ read str) span
 
+tokenBoolean :: Bool -> AlexAction
+tokenBoolean b span _ _ =
+  pure . Just $ Spanned (Tok.Boolean b) span
+
 tokenFloating :: AlexAction
 tokenFloating span _ str =
   pure . Just $ Spanned (Tok.Floating $ read str) span

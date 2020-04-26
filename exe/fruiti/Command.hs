@@ -11,6 +11,7 @@ import qualified Data.String as String
 import qualified Data.Text.Prettyprint.Doc as Doc
 import qualified Data.Text.Prettyprint.Doc.Render.Terminal as Ansi
 import Data.Text.Prettyprint.Doc.Render.Terminal (AnsiStyle, Color (..))
+import Data.These (These (..))
 import Error
 import qualified JS
 import qualified Language.Fruit.Core as Core
@@ -24,7 +25,7 @@ import System.Console.Repline
 import Text.Show.Pretty (ppShow)
 
 definition :: [String] -> Repl ()
-definition args = dontCrash do
+definition args = do
   defn@(AST.Definition _ var _) <- parseDefinition args
   unless (var == AST.Var "$$") do
     modify $ Map.insert (JS.Var $ toText var) (astToJsCode defn)
@@ -55,12 +56,12 @@ parseDefinition args = do
   case Parser.parse @AST.Term source of
     Right term ->
       pure $ AST.Definition (spanOf term) pseudoVar term
-    Left _ ->
+    Left termFail ->
       case Parser.parse @AST.Definition source of
-        Left definitionFail ->
-          throwM (ErrParser definitionFail)
         Right defn ->
           pure defn
+        Left definitionFail ->
+          throwM (ErrParser (These termFail definitionFail))
 
 astToCore :: AST.Definition -> AST.Term -> Core.Term
 astToCore defn = Core.optimize <$> AST.translateDefinitionToCore defn
@@ -92,7 +93,7 @@ formatAsJavaScript args = do
   putTextLn $ toText jsCode
 
 evalAsJavaScript :: [String] -> Repl ()
-evalAsJavaScript args = dontCrash do
+evalAsJavaScript args = do
   defn <- parseDefinition args
   env <- get
   evaluated <- JS.evalTerm env (astToJsCode defn)
@@ -100,7 +101,7 @@ evalAsJavaScript args = dontCrash do
   putTextLn $ toText evaluated
 
 evalJavaScript :: [String] -> Repl ()
-evalJavaScript args = dontCrash do
+evalJavaScript args = do
   let code = foldMap toText (intersperse " " args)
   putTextLn "═════ JS code ═════"
   putTextLn code

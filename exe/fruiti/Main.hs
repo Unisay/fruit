@@ -17,7 +17,7 @@ main = withUtf8 do
   runReplM
     ReplOpts
       { banner = pure "Fruit » ",
-        command = Command.definition . Str.words,
+        command = dontCrash . Command.definition . Str.words,
         options = commands,
         prefix = Just ':',
         tabComplete = Word0 completer,
@@ -49,12 +49,12 @@ ini =
 commands :: [(String, [String] -> Repl ())]
 commands =
   [ ("help", help),
-    ("parse", Command.parse),
+    ("parse", fmap dontCrash Command.parse),
     ("clear", Command.clear),
-    ("jsf", Command.formatAsJavaScript),
-    ("jse", Command.evalAsJavaScript),
-    ("jsr", Command.evalJavaScript),
-    ("format", Command.format)
+    ("jsf", fmap dontCrash Command.formatAsJavaScript),
+    ("jse", fmap dontCrash Command.evalAsJavaScript),
+    ("jsr", fmap dontCrash Command.evalJavaScript),
+    ("format", fmap dontCrash Command.format)
   ]
 
 help :: [String] -> Repl ()

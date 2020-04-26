@@ -12,11 +12,13 @@ translateFromCore :: Core.Term -> JS.Term
 translateFromCore = U.runFreshM . para \case
   Core.LitInteger i
     | i > 9007199254740991 ->
-      const . pure . JS.TermNumBigInt $ i
+      const . pure . JS.TermLit . JS.LitBigInt $ i
   Core.LitInteger i ->
-    const . pure . JS.TermNumInt . fromIntegral $ i
+    const . pure . JS.TermLit . JS.LitNumber . fromIntegral $ i
   Core.LitFloating d ->
-    const . pure . JS.TermNumFloating $ d
+    const . pure . JS.TermLit . JS.LitNumber $ d
+  Core.LitBoolean b ->
+    const . pure . JS.TermLit . JS.LitBoolean $ b
   Core.Var nam ->
     let var =
           if nam == "$$"

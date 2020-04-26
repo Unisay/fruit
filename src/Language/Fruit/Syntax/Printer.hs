@@ -72,6 +72,9 @@ printTerm = para \case
     where
       kwIn :: Doc Ann
       kwIn = annotate AnnKeyword "in"
+  TermITE {} -> \case
+    [i, t, e] -> hsep ["if", i, "then", t, "else", e]
+    _ -> error "Invalid number of terms while printing `if/then/else`"
   TermFun _ fun _ _ ->
     concatWith (surround (surround (printFun fun) space space))
 
@@ -79,6 +82,7 @@ printLit :: Lit -> Doc Ann
 printLit = annotate AnnLiteral . \case
   LitInteger i -> unsafeViaShow i
   LitFloating d -> unsafeViaShow d
+  LitBoolean b -> unsafeViaShow b
 
 printVar :: Var -> Doc Ann
 printVar = annotate AnnIdentifier . \case

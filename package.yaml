@@ -62,6 +62,7 @@ executables:
       - prettyprinter-ansi-terminal
       - repline
       - text
+      - these
       - transformers
       - typed-process
 

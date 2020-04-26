@@ -23,6 +23,7 @@ eval x = runFreshM (tc step x)
     step (Lam _) = mzero
     step (LitInteger _) = mzero
     step (LitFloating _) = mzero
+    step (LitBoolean _) = mzero
     step (Let arg bnd) =
       step (App (Lam bnd) arg)
     step (App (Lam bnd) arg) = do

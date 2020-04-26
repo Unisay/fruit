@@ -81,6 +81,9 @@ fruit :-
 <0> "exports" { token Tok.Exports }
 <0> "let" { token Tok.Let }
 <0> "in" { token Tok.In }
+<0> "if" { token Tok.If }
+<0> "then" { token Tok.Then }
+<0> "else" { token Tok.Else }
 
 -- Reserved symbols
 <0> "-" { token Tok.Dash }
@@ -101,6 +104,8 @@ fruit :-
 <0> @left_arr { token Tok.LeftArrow } 
 
 -- Literals
+<0> "True" { tokenBoolean True }
+<0> "False" { tokenBoolean False }
 <0> @signed @decimal { tokenInteger }
 <0> @signed @floating_point { tokenFloating }
 <0> "NaN" { tokenNaN }

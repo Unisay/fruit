@@ -45,6 +45,7 @@ data Term
   | TermLit Span Lit
   | TermVar Span Var
   | TermLet Span Var Term Term
+  | TermITE Span Term Term Term
   | TermFun Span Fun Term Term
   | TermScope Span Term
   deriving (Eq, Show, Generic)
@@ -56,6 +57,7 @@ instance Located Term where
     TermLit sp _ -> sp
     TermVar sp _ -> sp
     TermLet sp _ _ _ -> sp
+    TermITE sp _ _ _ -> sp
     TermFun sp _ _ _ -> sp
     TermScope sp _ -> sp
 
@@ -69,6 +71,8 @@ instance Uniplate Term where
       ([a, b], \case [a', b'] -> TermFun sp fun a' b'; _ -> x)
     x@(TermLet sp var a b) ->
       ([a, b], \case [a', b'] -> TermLet sp var a' b'; _ -> x)
+    x@(TermITE sp a b c) ->
+      ([a, b, c], \case [a', b', c'] -> TermITE sp a' b' c'; _ -> x)
     x@(TermLam sp var a) ->
       ([a], \case [a'] -> TermLam sp var a'; _ -> x)
     -- Case per leaf node in order not to disable exhaustveness checker
@@ -78,6 +82,7 @@ instance Uniplate Term where
 data Lit
   = LitInteger Integer
   | LitFloating Double
+  | LitBoolean Bool
   deriving stock (Eq, Ord, Show)
 
 newtype Var = Var Ident
@@ -103,21 +108,26 @@ translateTermToCore = para \case
   TermApp {} ->
     \case
       [t1, t2] -> Core.App t1 t2
-      _ -> err "Core.TermApp"
+      _ -> err 2 "Core.TermApp"
   TermLam _ (Var Ident {name}) _ ->
     \case
       [t] -> Core.mkLam name t
-      _ -> err "Core.TermLam"
+      _ -> err 1 "Core.TermLam"
   TermLit _ lit ->
     const case lit of
       LitInteger i -> Core.LitInteger i
       LitFloating f -> Core.LitFloating f
+      LitBoolean b -> Core.LitBoolean b
   TermVar _ (Var Ident {name}) ->
     const (Core.mkVar name)
   TermLet _ (Var Ident {name}) _ _ ->
     \case
       [t1, t2] -> Core.mkLet name t1 t2
-      _ -> err "Core.TermLam"
+      _ -> err 2 "Core.TermLam"
+  TermITE {} ->
+    \case
+      [i, t, e] -> Core.mkIte i t e
+      _ -> err 3 "Core.TermITE"
   TermFun _ fun _ _ ->
     foldl' Core.App . Core.mkVar $ case fun of
       Plus -> "plus"
@@ -128,7 +138,14 @@ translateTermToCore = para \case
   TermScope {} ->
     \case
       [t] -> t
-      _ -> err "AST.TermScope"
+      _ -> err 1 "AST.TermScope"
   where
-    err :: Text -> a
-    err = error . ("Unexpected number of sub-terms: " <>)
+    err :: Int -> Text -> a
+    err n c =
+      error $
+        "Language.Fruit.Syntax.AST.translateTermToCore: \
+        \unexpected number of sub-terms received (/= "
+          <> show n
+          <> ") while traversing "
+          <> c
+          <> " constructor"

@@ -6,6 +6,7 @@ module Language.Fruit.Syntax.Tok where
 
 import Data.Data (Data)
 import Language.Fruit.Data.Ident (Ident)
+import Prelude hiding (False, True)
 
 data Tok
   = Indent
@@ -18,10 +19,14 @@ data Tok
   | RParen
   | UpperId Ident
   | LowerId Ident
+  | Boolean Bool
   | Integer Integer
   | Floating Double
   | Let
   | In
+  | If
+  | Then
+  | Else
   | Dash
   | Dot
   | Comma

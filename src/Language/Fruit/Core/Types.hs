@@ -18,6 +18,7 @@ instance IsString Nam where
 data Term
   = LitInteger Integer
   | LitFloating Double
+  | LitBoolean Bool
   | Var Nam
   | App Term Term
   | Lam (Bind Nam Term)
@@ -35,6 +36,8 @@ instance Uniplate Term where
     x@LitInteger {} ->
       ([], const x)
     x@LitFloating {} ->
+      ([], const x)
+    x@LitBoolean {} ->
       ([], const x)
     x@Var {} ->
       ([], const x)
@@ -72,10 +75,22 @@ instance Uniplate Term where
             <> " constructor"
 
 mkLam :: String -> Term -> Term
-mkLam x = Lam . bind (string2Name x)
+mkLam = mkLamNam . string2Name
+
+mkLamNam :: Nam -> Term -> Term
+mkLamNam = (Lam .) . bind
 
 mkLet :: String -> Term -> Term -> Term
 mkLet x t = Let t . bind (string2Name x)
+
+mkApp2 :: Term -> Term -> Term -> Term
+mkApp2 = (App .) . App
+
+mkApp3 :: Term -> Term -> Term -> Term -> Term
+mkApp3 = ((App .) .) . mkApp2
+
+mkIte :: Term -> Term -> Term -> Term
+mkIte = mkApp3 (mkVar "IF")
 
 mkVar :: String -> Term
 mkVar = Var . string2Name

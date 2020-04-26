@@ -46,11 +46,16 @@ import Data.List.NonEmpty (NonEmpty(..))
   exports  { Spanned Tok.Exports _ }
   upperId  { Spanned (Tok.UpperId _) _ }
   lowerId  { Spanned (Tok.LowerId _) _ }
+  boolean  { Spanned (Tok.Boolean _) _ }
   integer  { Spanned (Tok.Integer _) _ }
   floating { Spanned (Tok.Floating _) _ }
   let      { Spanned Tok.Let _ }
   in       { Spanned Tok.In _ }
+  if       { Spanned Tok.If _ }
+  then     { Spanned Tok.Then _ }
+  else     { Spanned Tok.Else _ }
   eof      { Spanned Tok.EOF _ }
+%left '='
 %right let in
 %left '+' '-'
 %left '*' '/'
@@ -81,6 +86,8 @@ Term :: { AST.Term }
     { AST.TermApp $1 $2 } 
   | let Variable '=' Term in Term 
     { AST.TermLet ($1 # $3) (unspan $2) $4 $6 }
+  | if Term then Term else Term
+    { AST.TermITE ($1 # $6) $2 $4 $6 }
   | 'λ' Variable '.' Term
     { AST.TermLam ($1 # $3) (unspan $2) $4 }
   | Term1 { $1 }
@@ -113,6 +120,9 @@ Literal :: { AST.Term }
   : integer 
     { let Spanned (Tok.Integer i) span = $1 
        in AST.TermLit span (AST.LitInteger i) }
+  | boolean 
+    { let Spanned (Tok.Boolean b) span = $1
+       in AST.TermLit span (AST.LitBoolean b) }
   | floating 
     { let Spanned (Tok.Floating d) span = $1 
        in AST.TermLit span (AST.LitFloating d) }

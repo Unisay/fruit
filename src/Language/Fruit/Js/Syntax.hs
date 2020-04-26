@@ -18,10 +18,9 @@ data Lexeme
 
 data Term
   = TermVar Var
-  | TermNumInt Int
-  | TermNumBigInt Integer
-  | TermNumFloating Double
+  | TermLit Lit
   | TermOperator Operator Term Term
+  | TermConditional Term Term Term
   | TermLambda Pattern Term
   | TermFunction Var [Var] Term
   | TermCall Term [Term]
@@ -33,17 +32,19 @@ instance Uniplate Term where
   uniplate = \case
     x@TermVar {} ->
       (mempty, const x)
-    x@TermNumFloating {} ->
-      (mempty, const x)
-    x@TermNumInt {} ->
-      (mempty, const x)
-    x@TermNumBigInt {} ->
+    x@TermLit {} ->
       (mempty, const x)
     TermOperator op a b ->
       ( [a, b],
         \case
           [a', b'] -> TermOperator op a' b'
           _ -> err 2 "TermOperator"
+      )
+    TermConditional a b c ->
+      ( [a, b, c],
+        \case
+          [a', b', c'] -> TermConditional a' b' c'
+          _ -> err 3 "TermConditional"
       )
     TermLambda pat a ->
       ( [a],
@@ -94,6 +95,9 @@ newtype Name a = Name Text
 newtype Var = Var Text
   deriving stock (Show)
   deriving newtype (Eq, Ord, ToText, Hashable)
+
+data Lit = LitNumber Double | LitBigInt Integer | LitBoolean Bool
+  deriving (Eq, Show)
 
 newtype Pattern = PatternVar Var
   deriving stock (Show)
