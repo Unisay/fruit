@@ -8,13 +8,12 @@ import qualified Command
 import qualified Data.String as Str
 import Error
 import Main.Utf8 (withUtf8)
-import ReplM
 import System.Console.Repline
 import Text.Show.Pretty (ppShow)
 
 main :: IO ()
 main = withUtf8 do
-  runReplM
+  Command.runReplM
     ReplOpts
       { banner = pure "Fruit » ",
         command = dontCrash . Command.definition . Str.words,
@@ -35,7 +34,7 @@ completer n = do
   let names = ["help", "parse", "format"]
   return $ filter (isPrefixOf n) names
 
-ini :: Repl ()
+ini :: Command.Repl ()
 ini =
   liftIO $
     putStrLn
@@ -46,18 +45,18 @@ ini =
       \ \n\n\
       \(type :help for a list of available commands) \n"
 
-commands :: [(String, [String] -> Repl ())]
+commands :: [(String, [String] -> Command.Repl ())]
 commands =
   [ ("help", help),
     ("parse", fmap dontCrash Command.parse),
     ("clear", Command.clear),
-    ("jsf", fmap dontCrash Command.formatAsJavaScript),
+    ("jsf", dontCrash . void . Command.formatAsJavaScript),
     ("jse", fmap dontCrash Command.evalAsJavaScript),
     ("jsr", fmap dontCrash Command.evalJavaScript),
     ("format", fmap dontCrash Command.format)
   ]
 
-help :: [String] -> Repl ()
+help :: [String] -> Command.Repl ()
 help _ =
   liftIO $
     putText
@@ -67,8 +66,8 @@ help _ =
       \ - parses <expression>\n\
       \:format (or just :f) followed by <expression>\
       \ - formats <expression>\n\
-      \:clear  [<expression>]\
-      \ - clears (named expression | all expressions) saved in the session\n\
+      \:clear \
+      \ - clears all expressions saved in the session\n\
       \:jsf                 followed by <expression>\
       \ - compiles <expression> to JavaScript and prints it\n\
       \:jse                 followed by <expression>\

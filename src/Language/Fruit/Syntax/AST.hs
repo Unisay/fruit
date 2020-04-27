@@ -97,11 +97,10 @@ data Fun
   | Pow
   deriving (Eq, Ord, Show)
 
-translateDefinitionToCore :: Definition -> Term -> Core.Term
+translateDefinitionToCore :: Definition -> Core.Term -> Core.Term
 translateDefinitionToCore (Definition _ (Var Ident {name}) term) =
   Core.Let (translateTermToCore term)
     . UB.bind (UB.string2Name (toString name))
-    . translateTermToCore
 
 translateTermToCore :: Term -> Core.Term
 translateTermToCore = para \case

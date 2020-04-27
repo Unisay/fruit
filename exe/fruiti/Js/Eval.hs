@@ -9,15 +9,13 @@ import qualified Data.Text as Text
 import Language.Fruit.Js.Syntax
 import System.Process.Typed (readProcess_, shell)
 
-type Env = Map Var Code
-
 newtype Code = Code Text
   deriving newtype (Show, ToText, IsString)
 
 newtype Result = Result Text
   deriving newtype (Show, ToText)
 
-builtInEnv :: Env
+builtInEnv :: Map Var Code
 builtInEnv =
   Map.mapKeys Var . fmap Code . Map.fromList $
     [ ("plus", "x=>y=>(x+y)"),
@@ -27,16 +25,12 @@ builtInEnv =
       ("pow", "x=>y=>(x**y)")
     ]
 
-evalTerm :: MonadIO m => Env -> Code -> m Result
-evalTerm env jsCode = do
-  let code = reverse $ toText jsCode : formatEnv (Map.union builtInEnv env)
-      unJsLines = Text.intercalate ";\n"
-      js = unJsLines code
-  putTextLn "═════ JS code ═════"
-  putTextLn js
-  evalRawText js
+enrichWithStdLib :: Code -> Code
+enrichWithStdLib jsCode =
+  Code . Text.intercalate ";\n" $
+    reverse (toText jsCode : formatEnv builtInEnv)
   where
-    formatEnv :: Env -> [Text]
+    formatEnv :: Map Var Code -> [Text]
     formatEnv = Map.foldMapWithKey \var code ->
       ["const " <> toText var <> " = " <> toText code]
 
